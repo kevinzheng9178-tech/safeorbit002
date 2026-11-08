@@ -1,0 +1,18 @@
+# 锁定完整依赖树：安装时使用 pip install -c constraints.txt
+annotated-types==0.7.0
+anyio==4.12.1
+certifi==2026.7.22
+click==8.1.8
+fastapi==0.128.8
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.19
+pydantic==2.13.5
+pydantic-core==2.46.5
+python-multipart==0.0.20
+PyYAML==6.0.3
+sniffio==1.3.1
+starlette==0.49.3
+typing-extensions==4.16.0
+uvicorn==0.39.0

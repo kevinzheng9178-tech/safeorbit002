@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0",
+  "trace_id": "demo-loop-001",
+  "session_id": "sess-20261102-03",
+  "agent_id": "research-agent",
+  "agent_version": "v0.9",
+  "framework": "autogen",
+  "started_at": "2026-11-02T10:20:00+08:00",
+  "ended_at": "2026-11-02T10:20:20+08:00",
+  "status": "ok",
+  "source": "file",
+  "sampled": false,
+  "truncated_fields": ["llm.completion"],
+  "metadata": {
+    "scene": "多 Agent 研究：重复检索与交接缺上下文"
+  },
+  "spans": [
+    {
+      "span_id": "s1",
+      "kind": "agent",
+      "name": "research_task",
+      "start_time": "2026-11-02T10:20:00+08:00",
+      "end_time": "2026-11-02T10:20:20+08:00",
+      "status": "ok"
+    },
+    {
+      "span_id": "s2",
+      "parent_span_id": "s1",
+      "kind": "tool",
+      "name": "web_search",
+      "start_time": "2026-11-02T10:20:01+08:00",
+      "end_time": "2026-11-02T10:20:02+08:00",
+      "status": "ok",
+      "tool": {
+        "tool_name": "web_search",
+        "arguments": {"query": "Agent 审计 标准"},
+        "result": {"hits": 3},
+        "side_effect": "read"
+      }
+    },
+    {
+      "span_id": "s3",
+      "parent_span_id": "s1",
+      "kind": "tool",
+      "name": "web_search",
+      "start_time": "2026-11-02T10:20:03+08:00",
+      "end_time": "2026-11-02T10:20:04+08:00",
+      "status": "ok",
+      "tool": {
+        "tool_name": "web_search",
+        "arguments": {"query": "Agent 审计 标准"},
+        "result": {"hits": 3},
+        "side_effect": "read"
+      }
+    },
+    {
+      "span_id": "s4",
+      "parent_span_id": "s1",
+      "kind": "tool",
+      "name": "web_search",
+      "start_time": "2026-11-02T10:20:05+08:00",
+      "end_time": "2026-11-02T10:20:06+08:00",
+      "status": "ok",
+      "tool": {
+        "tool_name": "web_search",
+        "arguments": {"query": "Agent 审计 标准"},
+        "result": {"hits": 3},
+        "side_effect": "read"
+      }
+    },
+    {
+      "span_id": "s5",
+      "parent_span_id": "s1",
+      "kind": "tool",
+      "name": "web_search",
+      "start_time": "2026-11-02T10:20:07+08:00",
+      "end_time": "2026-11-02T10:20:08+08:00",
+      "status": "ok",
+      "tool": {
+        "tool_name": "web_search",
+        "arguments": {"query": "Agent 审计 标准"},
+        "result": {"hits": 3},
+        "side_effect": "read"
+      }
+    },
+    {
+      "span_id": "s6",
+      "parent_span_id": "s1",
+      "kind": "handoff",
+      "name": "handoff_to_summarizer",
+      "start_time": "2026-11-02T10:20:10+08:00",
+      "end_time": "2026-11-02T10:20:11+08:00",
+      "status": "ok",
+      "handoff": {
+        "from_agent": "researcher",
+        "to_agent": "summarizer",
+        "message": null
+      }
+    },
+    {
+      "span_id": "s7",
+      "parent_span_id": "s6",
+      "kind": "llm",
+      "name": "summarize",
+      "start_time": "2026-11-02T10:20:12+08:00",
+      "end_time": "2026-11-02T10:20:20+08:00",
+      "status": "error",
+      "error": "context window exceeded",
+      "llm": {
+        "provider": "deepseek",
+        "model": "deepseek-reasoner",
+        "messages": [
+          {"role": "user", "content": "请总结检索结果。"}
+        ],
+        "completion": null,
+        "usage": {"prompt": 3000, "completion": 0, "reasoning": 900}
+      }
+    }
+  ]
+}

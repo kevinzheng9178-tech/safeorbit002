@@ -1,0 +1,19 @@
+# SafeOrbit 模型价格表（单位：美元 / 每百万 token）
+#
+# 重要：价格会变，这里只是内置的示例值。
+# 上线前请对照模型厂商官网核对，并保留 effective_date 以便报告追溯口径。
+currency: USD
+effective_date: "2026-01-01"
+models:
+  deepseek-chat:
+    input_per_1m: 0.27
+    cached_input_per_1m: 0.07
+    output_per_1m: 1.10
+  deepseek-reasoner:
+    input_per_1m: 0.55
+    cached_input_per_1m: 0.14
+    output_per_1m: 2.19
+  gpt-4o-mini:
+    input_per_1m: 0.15
+    cached_input_per_1m: 0.075
+    output_per_1m: 0.60

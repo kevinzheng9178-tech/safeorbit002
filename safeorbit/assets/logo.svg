@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" role="img" aria-label="SafeOrbit 安轨">
+  <title>SafeOrbit 安轨</title>
+  <desc>装甲分面盾牌是被审计守护的核心，盾内负空间对勾表示通过校验；三道轨道分别是采集、审计、治理，缺口与节点表示人工闸门与证据锚点。</desc>
+  <defs>
+    <linearGradient id="so-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#131C20"/>
+      <stop offset="1" stop-color="#0A0F12"/>
+    </linearGradient>
+    <linearGradient id="so-ring" x1="0.1" y1="0.1" x2="0.9" y2="0.9">
+      <stop offset="0" stop-color="#65D6C1"/>
+      <stop offset="1" stop-color="#B4A5E8"/>
+    </linearGradient>
+    <linearGradient id="so-face-light" x1="0.15" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#D6FFF4"/>
+      <stop offset="0.45" stop-color="#8DEDD8"/>
+      <stop offset="1" stop-color="#3FAF99"/>
+    </linearGradient>
+    <linearGradient id="so-face-mid" x1="0.3" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="#6FE3CB"/>
+      <stop offset="0.55" stop-color="#3CB49E"/>
+      <stop offset="1" stop-color="#1D6358"/>
+    </linearGradient>
+    <radialGradient id="so-glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0" stop-color="#65D6C1" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#65D6C1" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="so-shield-glow" x="-45%" y="-45%" width="190%" height="190%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <!-- 盾内负空间对勾：一处 mask 保证跨分面镂空 -->
+    <mask id="so-shield-cut">
+      <rect width="240" height="240" fill="#FFFFFF"/>
+      <path d="M104 113 L116 126 L137 99" fill="none" stroke="#000000" stroke-width="10"
+            stroke-linecap="round" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+
+  <rect x="4" y="4" width="232" height="232" rx="58" fill="url(#so-bg)"/>
+  <rect x="5.25" y="5.25" width="229.5" height="229.5" rx="56.75" fill="none"
+        stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="1.5"/>
+  <circle cx="120" cy="120" r="96" fill="url(#so-glow)"/>
+
+  <!-- 外轨：采集。留出缺口，代表审计透明、不是黑箱 -->
+  <path d="M166 40.3 A92 92 0 1 1 60.9 49.5" fill="none"
+        stroke="url(#so-ring)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- 中轨：审计。虚线表示逐条轨迹的离散采样 -->
+  <circle cx="120" cy="120" r="66" fill="none"
+          stroke="#65D6C1" stroke-opacity="0.4" stroke-width="2" stroke-dasharray="3 9"/>
+
+  <!-- 内轨：治理边界。四段短弧让盾牌自然嵌入 -->
+  <circle cx="120" cy="120" r="50" fill="none"
+          stroke="#FFFFFF" stroke-opacity="0.2" stroke-width="2.5"
+          stroke-dasharray="46 32" transform="rotate(10 120 120)"/>
+
+  <!-- 盾牌外发光 -->
+  <path d="M120 72 L154 86 V118 L146 136 L134 149 L120 161 L106 149 L94 136 L86 118 V86 Z"
+        fill="#65D6C1" fill-opacity="0.4" filter="url(#so-shield-glow)"/>
+
+  <!-- 盾体：左亮右暗的装甲分面 -->
+  <g mask="url(#so-shield-cut)">
+    <path d="M120 72 L86 86 V118 L94 136 L106 149 L120 161 Z" fill="url(#so-face-light)"/>
+    <path d="M120 72 L154 86 V118 L146 136 L134 149 L120 161 Z" fill="url(#so-face-mid)"/>
+    <!-- 顶部受光面 -->
+    <path d="M120 72 L154 86 V97 L120 83 L86 97 V86 Z" fill="#EFFFFB" fill-opacity="0.22"/>
+    <!-- 装甲接缝：避开对勾区域 -->
+    <path d="M120 72 V96" stroke="#08211D" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round"/>
+    <path d="M120 138 V161" stroke="#08211D" stroke-opacity="0.45" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- 盾缘高光 -->
+  <path d="M120 72 L154 86 V118 L146 136 L134 149 L120 161 L106 149 L94 136 L86 118 V86 Z"
+        fill="none" stroke="#D6FFF4" stroke-opacity="0.55" stroke-width="1.6"
+        stroke-linejoin="round"/>
+
+  <!-- 闸门节点：人类审批 / 阻断点 -->
+  <circle cx="166" cy="40.3" r="6.5" fill="#65D6C1"/>
+  <!-- 交接节点：多智能体或多系统边界 -->
+  <circle cx="60.9" cy="49.5" r="4.5" fill="#B4A5E8"/>
+  <!-- 证据锚点：可校验的定位 -->
+  <circle cx="210.6" cy="136" r="3.5" fill="#EDC279"/>
+</svg>

@@ -1,0 +1,28 @@
+# 仅为配置示例，不表示账号有权限或已联通。密钥只在本机环境变量中设置。
+# 设置 SAFEORBIT_MODELS_CONFIG 指向本文件副本，修改后重启。
+version: 1
+default_gateway: deepseek-chat
+judge_profile: deepseek-chat
+profiles:
+  - id: deepseek-chat
+    provider: deepseek
+    model: deepseek-chat
+    api_key_env: DEEPSEEK_API_KEY
+    judge: true
+  - id: qwen-plus
+    provider: dashscope
+    model: qwen-plus
+    api_key_env: DASHSCOPE_API_KEY
+  - id: gpt-4o-mini
+    provider: openai
+    model: gpt-4o-mini
+    api_key_env: OPENAI_API_KEY
+  - id: custom-example
+    provider: custom
+    base_url: https://api.example.com/v1
+    model: replace-with-provider-model
+    api_key_env: CUSTOM_API_KEY
+    gateway: false
+    judge: false
+    supports_stream: false
+    supports_json_object: false

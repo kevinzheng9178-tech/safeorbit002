@@ -1,0 +1,37 @@
+services:
+  safeorbit:
+    build: .
+    image: safeorbit:0.5.0
+    container_name: safeorbit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      SAFEORBIT_MODE: shadow
+      SAFEORBIT_LOG_FORMAT: json
+      SAFEORBIT_LOG_LEVEL: INFO
+      SAFEORBIT_COOKIE_SECURE: "0"          # 本地 HTTP 调试；对外请改回 1
+      SAFEORBIT_ADMIN_USERNAME: admin
+      SAFEORBIT_ADMIN_PASSWORD: ${SAFEORBIT_ADMIN_PASSWORD:?请在 .env 中设置强口令}
+    volumes:
+      - safeorbit-data:/data
+      - ./reports:/reports
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys,urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3).status == 200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 1g
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  safeorbit-data:

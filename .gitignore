@@ -1,0 +1,43 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# 测试与工具缓存
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 运行时数据与产物
+data/
+reports/
+dist/
+*.db
+*.db-wal
+*.db-shm
+*.db.backup-*
+*.pre-restore-*
+.smoke*/
+.screenshots/
+
+# 第三方演示 Agent（按需从 GitHub 克隆，不随仓库分发）
+examples/third_party/
+
+# 本地工具产物与计划草稿
+output/
+.trae/
+.workbuddy/
+
+# 本地配置与编辑器
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

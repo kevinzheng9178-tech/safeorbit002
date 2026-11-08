@@ -1,0 +1,41 @@
+{
+  "note": "示例漏洞库，仅用于本地演示。生产请定期同步 OSV/NVD，并通过 SAFEORBIT_SCA_ADVISORIES 指向更新后的文件。",
+  "advisories": [
+    {
+      "id": "CVE-2021-23337",
+      "package": "lodash",
+      "ecosystem": "npm",
+      "affected": "<4.17.21",
+      "fixed": "4.17.21",
+      "severity": "high",
+      "summary": "lodash 命令注入风险，受影响版本低于 4.17.21"
+    },
+    {
+      "id": "CVE-2023-32681",
+      "package": "requests",
+      "ecosystem": "pypi",
+      "affected": "<2.31.0",
+      "fixed": "2.31.0",
+      "severity": "medium",
+      "summary": "requests 可能通过代理泄露认证头，受影响版本低于 2.31.0"
+    },
+    {
+      "id": "CVE-2023-45803",
+      "package": "urllib3",
+      "ecosystem": "pypi",
+      "affected": "<2.0.7",
+      "fixed": "2.0.7",
+      "severity": "medium",
+      "summary": "urllib3 在特定重定向场景下可能泄露请求体，受影响版本低于 2.0.7"
+    },
+    {
+      "id": "CVE-2023-30861",
+      "package": "flask",
+      "ecosystem": "pypi",
+      "affected": "<2.2.5",
+      "fixed": "2.2.5",
+      "severity": "high",
+      "summary": "Flask 会话 Cookie 在特定配置下可能被缓存，受影响版本低于 2.2.5"
+    }
+  ]
+}

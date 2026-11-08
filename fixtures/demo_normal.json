@@ -1,0 +1,118 @@
+{
+  "schema_version": "1.0",
+  "trace_id": "demo-normal-001",
+  "session_id": "sess-20261102-01",
+  "agent_id": "ecs-cs-agent",
+  "agent_version": "v1.3",
+  "framework": "langgraph",
+  "started_at": "2026-11-02T10:00:00+08:00",
+  "ended_at": "2026-11-02T10:00:07+08:00",
+  "status": "ok",
+  "source": "file",
+  "metadata": {
+    "budget_usd": 0.01,
+    "scene": "电商客服：正常退款咨询"
+  },
+  "spans": [
+    {
+      "span_id": "s1",
+      "kind": "agent",
+      "name": "handle_refund_request",
+      "start_time": "2026-11-02T10:00:00+08:00",
+      "end_time": "2026-11-02T10:00:07+08:00",
+      "status": "ok"
+    },
+    {
+      "span_id": "s2",
+      "parent_span_id": "s1",
+      "kind": "llm",
+      "name": "plan",
+      "start_time": "2026-11-02T10:00:00+08:00",
+      "end_time": "2026-11-02T10:00:01+08:00",
+      "status": "ok",
+      "llm": {
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "messages": [
+          {"role": "system", "content": "你是电商客服，先核对订单再处理退款。"},
+          {"role": "user", "content": "我买的耳机想退款，订单号 O-20261102-001。"}
+        ],
+        "completion": "先查询订单与物流状态，再判断是否符合退款条件。",
+        "usage": {"prompt": 820, "completion": 120, "cached": 400},
+        "temperature": 0.2,
+        "finish_reason": "stop"
+      },
+      "evidence_ref": "evidence/demo-normal-001/s2.json"
+    },
+    {
+      "span_id": "s3",
+      "parent_span_id": "s1",
+      "kind": "retrieval",
+      "name": "search_refund_policy",
+      "start_time": "2026-11-02T10:00:01+08:00",
+      "end_time": "2026-11-02T10:00:02+08:00",
+      "status": "ok",
+      "retrieval": {
+        "query": "七天无理由退款 条件",
+        "top_k": 3,
+        "documents": [
+          {"id": "doc-11", "content": "签收后七天内可申请无理由退款。"},
+          {"id": "doc-12", "content": "耳机类商品需保持包装完整。"}
+        ]
+      }
+    },
+    {
+      "span_id": "s4",
+      "parent_span_id": "s1",
+      "kind": "tool",
+      "name": "get_order",
+      "start_time": "2026-11-02T10:00:02+08:00",
+      "end_time": "2026-11-02T10:00:03+08:00",
+      "status": "ok",
+      "tool": {
+        "tool_name": "get_order",
+        "arguments": {"order_id": "O-20261102-001"},
+        "result": {"status": "已签收", "days_since_delivery": 3, "amount": 899},
+        "side_effect": "read"
+      }
+    },
+    {
+      "span_id": "s5",
+      "parent_span_id": "s1",
+      "kind": "llm",
+      "name": "compose_answer",
+      "start_time": "2026-11-02T10:00:03+08:00",
+      "end_time": "2026-11-02T10:00:05+08:00",
+      "status": "ok",
+      "llm": {
+        "provider": "deepseek",
+        "model": "deepseek-chat",
+        "messages": [
+          {"role": "system", "content": "根据订单状态与退款政策回答用户。"},
+          {"role": "user", "content": "订单状态：已签收 3 天，金额 899。"}
+        ],
+        "completion": "您的订单签收未超过七天，可以申请退款。请确认商品包装完整。",
+        "usage": {"prompt": 1200, "completion": 200},
+        "temperature": 0.2,
+        "finish_reason": "stop"
+      },
+      "evidence_ref": "evidence/demo-normal-001/s5.json"
+    },
+    {
+      "span_id": "s6",
+      "parent_span_id": "s1",
+      "kind": "tool",
+      "name": "send_message",
+      "start_time": "2026-11-02T10:00:05+08:00",
+      "end_time": "2026-11-02T10:00:06+08:00",
+      "status": "ok",
+      "tool": {
+        "tool_name": "send_message",
+        "arguments": {"channel": "im", "text": "您的退款申请可以受理。"},
+        "result": {"delivered": true},
+        "side_effect": "write",
+        "confirmed_by_human": true
+      }
+    }
+  ]
+}
