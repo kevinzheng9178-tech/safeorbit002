@@ -240,6 +240,7 @@ def render_html(report: AuditReport) -> str:
     color = _VERDICT_COLOR[report.verdict]
     label = _VERDICT_LABEL[report.verdict]
     hits_html = _render_hits(report.hits)
+    crew_html = _render_crew(report.hits)
     cost_rows = "".join(
         "<tr><td>%s</td><td>%s</td><td>$%.6f</td></tr>"
         % (html.escape(model), html.escape(_model_token_share(report, model)), amount)
@@ -355,6 +356,7 @@ def render_html(report: AuditReport) -> str:
 
   <section>
     <h2>结论与发现 · {hit_count} 项</h2>
+    {crew}
     {hits}
   </section>
 
@@ -439,6 +441,7 @@ def render_html(report: AuditReport) -> str:
         score=score_hits(report.hits),
         hit_count=len(report.hits),
         hits=hits_html,
+        crew=crew_html,
         cost_rows=cost_rows,
         top_spans=top_spans,
         unknown_pricing=unknown_html,
@@ -465,6 +468,55 @@ def render_html(report: AuditReport) -> str:
     )
 
 
+_CREW_LABELS = {
+    "semantic_agent": "语义审计 Agent",
+    "compliance_agent": "合规审计 Agent",
+}
+
+
+def _render_crew(hits: List[RuleHit]) -> str:
+    """按产出角色汇总，展示这支审计小队各自提出了什么、依据哪份文档。"""
+
+    groups: Dict[str, List[RuleHit]] = {}
+    for hit in hits:
+        if not hit.produced_by:
+            continue
+        groups.setdefault(hit.produced_by, []).append(hit)
+    if not groups:
+        return ""
+
+    cards = []
+    for role, items in groups.items():
+        names = sorted({hit.rule_name for hit in items})
+        cites = []
+        seen = set()
+        for hit in items:
+            for item in hit.citations:
+                key = (item.doc_id, item.section)
+                if key in seen:
+                    continue
+                seen.add(key)
+                cites.append(item)
+        cite_html = ""
+        if cites:
+            cite_html = "<div class='source' style='margin-top:4px;'>依据：" + "；".join(
+                html.escape(item.title) + (" / " + html.escape(item.section) if item.section else "")
+                for item in cites[:3]
+            ) + "</div>"
+        cards.append(
+            "<div style='border:1px solid #2d363d;border-radius:8px;padding:10px 12px;margin-bottom:8px;'>"
+            "<b>%s</b><span class='source'> · 提出 %d 条 · 建议复核</span>"
+            "<div class='source' style='margin-top:4px;'>%s</div>%s</div>"
+            % (
+                html.escape(_CREW_LABELS.get(role, role)),
+                len(items),
+                html.escape("、".join(names)),
+                cite_html,
+            )
+        )
+    return "<div style='margin-bottom:14px;'>" + "".join(cards) + "</div>"
+
+
 def _render_hits(hits: List[RuleHit]) -> str:
     if not hits:
         return "<p class='muted'>未发现需要关注的问题。</p>"
@@ -474,12 +526,28 @@ def _render_hits(hits: List[RuleHit]) -> str:
         evidence = json.dumps(hit.evidence, ensure_ascii=False, indent=2, default=str)
         source = "规则判定" if hit.source == "rule" else "语义裁判（建议复核）"
         span = '<code>%s</code>' % html.escape(hit.span_ref) if hit.span_ref else "<span class='muted'>未绑定 span</span>"
+        quote_html = ""
+        if hit.evidence_quote:
+            quote_html = '<div class="ev">原文：%s</div>' % html.escape(hit.evidence_quote[:300])
+        cite_html = ""
+        if hit.citations:
+            items = "".join(
+                "<li>%s%s：%s</li>" % (
+                    html.escape(item.title),
+                    (" / " + html.escape(item.section)) if item.section else "",
+                    html.escape(item.snippet[:160]),
+                )
+                for item in hit.citations
+            )
+            cite_html = '<div class="ev">依据：<ul style="margin:4px 0 0 16px;padding:0;">%s</ul></div>' % items
         blocks.append(
             """<div class="finding">
   <span class="sev sev-{sev}">{sev_label}</span>
   <span class="source"> · {dimension} · {source}{review}</span>
   <div class="msg" style="margin-top:6px;">{message}</div>
   <div class="source" style="margin-top:4px;">定位：{span}</div>
+  {quote}
+  {cite}
   <div class="ev">{evidence}</div>
 </div>""".format(
                 sev=hit.severity.value,
@@ -489,6 +557,8 @@ def _render_hits(hits: List[RuleHit]) -> str:
                 review="（需复核）" if hit.needs_review else "",
                 message=html.escape(hit.message),
                 span=span,
+                quote=quote_html,
+                cite=cite_html,
                 evidence=html.escape(evidence[:600]),
             )
         )

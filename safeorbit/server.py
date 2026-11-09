@@ -77,7 +77,12 @@ from .policy import Policy, PolicyStore
 from .report import build_report, render_html
 from .rules import AuditContext, RuleEngine, default_rules
 from .store import EventBus, TraceStore
+from .eventstore import TraceEventStore
 from .summary import SummaryReport, build_summary_report, render_summary_html
+from .runtime_mode import RuntimeMode, RuntimeModeError
+from .audit_params import AuditParams, AuditParamsError, apply_to_config
+from .kb import default_kb
+from .crew import run_crew
 from .verdict import compose_verdict
 
 from . import logging_config
@@ -85,23 +90,44 @@ from . import logging_config
 logging_config.configure_logging()
 logger = logging.getLogger("safeorbit.server")
 
-MODE = os.getenv("SAFEORBIT_MODE", "shadow").lower()
-if MODE not in ("shadow", "enforce"):
-    MODE = "shadow"
 MOCK_UPSTREAM = os.getenv("SAFEORBIT_UPSTREAM_MOCK", "0").lower() in ("1", "true", "yes")
 DB_PATH = os.getenv("SAFEORBIT_DB", "data/safeorbit.db")
+# 全局运行模式：显式启动参数优先，否则读网页保存的值
+RUNTIME_MODE = RuntimeMode(DB_PATH, startup_mode=os.getenv("SAFEORBIT_MODE"))
+# 审计参数：网页可配置，默认值来自代码与环境变量
+AUDIT_PARAMS = AuditParams(DB_PATH)
+
+
+def _mode() -> str:
+    return RUNTIME_MODE.current()
+
+
+def _judge_config(registry):
+    """统一构造裁判配置，并叠加网页保存的审计参数。"""
+
+    config = JudgeConfig.from_registry(registry)
+    if config is not None:
+        apply_to_config(AUDIT_PARAMS.current(), config)
+    return config
+
+
 REPORT_DIR = Path(os.getenv("SAFEORBIT_REPORT_DIR", "reports/live"))
 CODE_REPORT_DIR = Path(os.getenv("SAFEORBIT_CODE_REPORT_DIR", "reports/codeaudit"))
 SCA_REPORT_DIR = Path(os.getenv("SAFEORBIT_SCA_REPORT_DIR", "reports/sca"))
 INFRA_REPORT_DIR = Path(os.getenv("SAFEORBIT_INFRA_REPORT_DIR", "reports/infra"))
 EVIDENCE_DIR = Path(os.getenv("SAFEORBIT_EVIDENCE_DIR", "reports/evidence"))
 SUMMARY_REPORT_DIR = Path(os.getenv("SAFEORBIT_SUMMARY_REPORT_DIR", "reports/summaries"))
+# 审计小队分工详情：按 trace 缓存并落盘，服务重启后仍可回看
+CREW_DIR = Path(os.getenv("SAFEORBIT_CREW_DIR", "reports/crew"))
+_CREW_CACHE: Dict[str, Dict[str, Any]] = {}
+_CREW_CACHE_LIMIT = 200
 PUBLIC_GATEWAY_URL = os.getenv("SAFEORBIT_PUBLIC_URL", "http://127.0.0.1:8000/v1")
 JUDGE_ENABLED = os.getenv("SAFEORBIT_JUDGE", "off").lower() in ("1", "true", "yes")
 AUTH_ENABLED = os.getenv("SAFEORBIT_AUTH", "on").lower() not in ("0", "off", "false", "no")
 COOKIE_SECURE = os.getenv("SAFEORBIT_COOKIE_SECURE", "1").lower() not in ("0", "false", "off")
 CORS_ORIGINS = [item.strip() for item in os.getenv("SAFEORBIT_CORS_ORIGINS", "").split(",") if item.strip()]
 STREAM_AUDIT_MAX_BYTES = int(os.getenv("SAFEORBIT_STREAM_AUDIT_MAX_BYTES", "1048576"))
+BATCH_INGEST_LIMIT = int(os.getenv("SAFEORBIT_BATCH_INGEST_LIMIT", "50"))
 # 代码检查支持拖拽上传：限制上传体积、文件数与解压后总体积，避免压缩炸弹。
 CODE_UPLOAD_MAX_BYTES = int(os.getenv("SAFEORBIT_CODE_UPLOAD_MAX_BYTES", str(60 * 1024 * 1024)))
 CODE_UPLOAD_MAX_FILES = int(os.getenv("SAFEORBIT_CODE_UPLOAD_MAX_FILES", "2000"))
@@ -111,6 +137,7 @@ SESSION_TTL_SECONDS = 12 * 3600
 
 PRICING = load_pricing()
 STORE = TraceStore(DB_PATH)
+EVENT_STORE = TraceEventStore(DB_PATH)
 MODEL_SETTINGS = ModelSettings(DB_PATH)
 MODEL_REGISTRY = MODEL_SETTINGS.snapshot().registry
 JUDGE_ENABLED = MODEL_SETTINGS.snapshot().judge_enabled
@@ -178,7 +205,7 @@ async def require_secure_startup() -> None:
     if "*" in CORS_ORIGINS:
         raise RuntimeError("CORS 必须配置显式来源，不允许通配符")
     AUTH_STORE.require_ready()
-    if MODE == "enforce":
+    if _mode() == "enforce":
         default_policy = next(
             (item for item in POLICY.list() if item.agent_id == "*"), None
         )
@@ -560,6 +587,24 @@ async def enable_agent(agent_id: str, request: Request) -> Dict[str, Any]:
     return {"agent": result}
 
 
+@app.delete("/api/agents/{agent_id}")
+async def delete_agent(agent_id: str, request: Request) -> Dict[str, Any]:
+    """删除智能体与全部 Key；已产生的轨迹与报告保留。"""
+
+    user = _require(request, "admin")
+    try:
+        result = AGENTS.delete_agent(agent_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    AUDIT_LOG.log(
+        user.username, "agent.delete", agent_id,
+        {"keys_deleted": result["keys_deleted"]},
+        tenant_id=user.tenant_id,
+    )
+    logger.info("智能体已删除：%s keys=%d by=%s", agent_id, result["keys_deleted"], user.username)
+    return result
+
+
 @app.get("/api/agents/{agent_id}/keys")
 async def list_agent_keys(agent_id: str, request: Request) -> Dict[str, Any]:
     _require(request, "admin")
@@ -630,7 +675,7 @@ def _resolve_context(agent_id: str, request: Request) -> AuditContext:
 def _effective_mode(agent_id: str, request: Request) -> str:
     """全局模式是上限：只有服务端开启 enforce，单个 Agent 才能被真正阻断。"""
 
-    if MODE != "enforce":
+    if _mode() != "enforce":
         return "shadow"
     policy = POLICY.resolve(agent_id)
     requested = policy.mode if policy else "shadow"
@@ -785,7 +830,7 @@ async def list_policies(request: Request) -> Dict[str, Any]:
         ]
     return {
         "policies": [policy.model_dump(mode="json") for policy in policies],
-        "mode": MODE,
+        "mode": _mode(),
     }
 
 
@@ -816,7 +861,7 @@ async def simulate_policy(request: Request) -> Dict[str, Any]:
     )
     context = preview.to_context()
     rules = preview.select_rules(RULES)
-    effective_mode = preview.mode if MODE == "enforce" else "shadow"
+    effective_mode = preview.mode if _mode() == "enforce" else "shadow"
     counts = {"pass": 0, "warn": 0, "fail": 0, "review": 0}
     would_block = 0
     would_review = 0
@@ -865,7 +910,7 @@ async def simulate_policy(request: Request) -> Dict[str, Any]:
     current = POLICY.find_by_agent(values["agent_id"])
     return {
         "policy": preview.model_dump(mode="json"),
-        "global_mode": MODE,
+        "global_mode": _mode(),
         "effective_mode": effective_mode,
         "current_policy": current.model_dump(mode="json") if current else None,
         "scanned": len(rows),
@@ -1136,7 +1181,7 @@ async def execute_disposition(disposition_id: str, request: Request) -> Dict[str
 async def runtime_state(request: Request) -> Dict[str, Any]:
     user = _require(request, "viewer")
     return {
-        "mode": MODE,
+        "mode": _mode(),
         "runtime": _filter_runtime(DISPO.runtime_summary(), _allowed_agent_ids(user)),
     }
 
@@ -1271,6 +1316,51 @@ def _safe_name(value: str) -> str:
     return re.sub(r"[^A-Za-z0-9_.-]", "_", value)[:120]
 
 
+def _remember_crew(trace_id: str, crew) -> None:
+    """记录小队分工：内存缓存 + 落盘，避免服务重启后详情丢失。"""
+
+    record = {
+        "trace_id": trace_id,
+        "status": crew.status,
+        "note": crew.note,
+        "agents": [
+            {
+                "role": agent.role,
+                "name": agent.name,
+                "status": agent.status,
+                "findings": agent.findings,
+                "note": agent.note,
+                "citations": agent.citations,
+            }
+            for agent in crew.agents
+        ],
+        "created_at": datetime.now().astimezone().isoformat(),
+    }
+    _CREW_CACHE[trace_id] = record
+    while len(_CREW_CACHE) > _CREW_CACHE_LIMIT:
+        _CREW_CACHE.pop(next(iter(_CREW_CACHE)), None)
+    try:
+        CREW_DIR.mkdir(parents=True, exist_ok=True)
+        (CREW_DIR / (_safe_name(trace_id) + ".json")).write_text(
+            json.dumps(record, ensure_ascii=False), encoding="utf-8"
+        )
+    except OSError:
+        pass
+
+
+def _load_crew(trace_id: str) -> Optional[Dict[str, Any]]:
+    cached = _CREW_CACHE.get(trace_id)
+    if cached is not None:
+        return cached
+    path = CREW_DIR / (_safe_name(trace_id) + ".json")
+    if not path.is_file():
+        return None
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
 def _audit_lock(trace_id: str):
     """同一条轨迹串行合并，不同轨迹可并行审计。锁按当前事件循环惰性创建。"""
 
@@ -1359,17 +1449,18 @@ async def process_trace(
             judge_note = "语义裁判未启用"
             if snapshot.judge_enabled:
                 selected = snapshot.registry.resolve_judge()
-                config = JudgeConfig.from_registry(snapshot.registry)
+                config = _judge_config(snapshot.registry)
                 if config is None:
                     judge_note = "裁判 %s 未配置密钥（%s），跳过语义裁判" % (
                         selected.id if selected else "默认",
                         selected.api_key_env if selected else "SAFEORBIT_JUDGE_API_KEY / DEEPSEEK_API_KEY",
                     )
                 else:
-                    outcome = await judge_trajectory(normalized, config)
-                    hits.extend(outcome.hits)
-                    judge_status = outcome.status
-                    judge_note = outcome.note
+                    crew = await run_crew(normalized, config)
+                    hits.extend(crew.hits)
+                    judge_status = crew.status
+                    judge_note = crew.note
+                    _remember_crew(normalized.trace_id, crew)
 
             report = build_report(
                 normalized,
@@ -1382,6 +1473,19 @@ async def process_trace(
             html = render_html(report)
             # SQLite 为同步驱动：放到线程池执行，避免 checkpoint 或锁等待阻塞事件循环
             await anyio.to_thread.run_sync(STORE.save, normalized, report, html)
+
+            # 行为事件是审计的只读事实层；失败不能拖垮报告，但必须留下日志。
+            policy_ref = None
+            if active_policy is not None:
+                policy_ref = "%s@%s" % (
+                    active_policy.policy_id, active_policy.updated_at.isoformat()
+                )
+            try:
+                await anyio.to_thread.run_sync(
+                    lambda: EVENT_STORE.ingest(normalized, policy_ref=policy_ref, mode=mode)
+                )
+            except Exception:
+                logger.exception("行为事件入库失败：%s", normalized.trace_id)
 
             REPORT_DIR.mkdir(parents=True, exist_ok=True)
             (REPORT_DIR / (_safe_name(normalized.trace_id) + ".html")).write_text(
@@ -1435,9 +1539,9 @@ async def process_trace(
 # 页面与查询
 # --------------------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
-async def dashboard() -> str:
-    # 页面本身可公开访问，数据接口要求登录；登录框由页面内 JS 控制
-    return DASHBOARD_HTML
+async def dashboard() -> HTMLResponse:
+    # 页面文件禁止缓存，避免浏览器长期持有旧版页面；数据接口要求登录
+    return HTMLResponse(DASHBOARD_HTML, headers={"Cache-Control": "no-store"})
 
 
 _LOGO_PATH = Path(__file__).with_name("assets") / "logo.svg"
@@ -1470,7 +1574,7 @@ async def health() -> Dict[str, Any]:
     return {
         "ok": True,
         "version": "0.5.0",
-        "mode": MODE,
+        "mode": _mode(),
         "mock_upstream": MOCK_UPSTREAM,
         "judge_enabled": _model_snapshot().judge_enabled,
         "auth_enabled": AUTH_ENABLED,
@@ -1520,15 +1624,44 @@ async def system_status(request: Request) -> Dict[str, Any]:
     """管理员可见的运行状态：依赖健康、熔断状态与进程内计数。"""
 
     _require(request, "admin")
+    mode_state = RUNTIME_MODE.status()
     return {
         "version": "0.5.0",
-        "mode": MODE,
+        "mode": mode_state["mode"],
+        "mode_source": mode_state["source"],
+        "mode_locked": mode_state["locked"],
         "uptime_seconds": int(time.monotonic() - STARTED_AT),
         "db_ok": _db_healthy(),
         "judge_enabled": _model_snapshot().judge_enabled,
         "circuits": circuit_mod.REGISTRY.status(),
         "counters": dict(METRICS.counters),
+        "events": EVENT_STORE.counts(tenant_id=_tenant_scope(_current_user(request))),
     }
+
+
+@app.post("/api/system/mode")
+async def set_system_mode(request: Request) -> Dict[str, Any]:
+    """管理员切换全局运行模式；shadow 只记录，enforce 才允许阻断。"""
+
+    user = _require(request, "admin")
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="请求体必须是 JSON")
+    try:
+        result = RUNTIME_MODE.set(str(payload.get("mode") or ""), updated_by=user.username)
+    except RuntimeModeError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+    AUDIT_LOG.log(
+        user.username, "system.mode", result["mode"],
+        {"previous": result.get("previous"), "locked": result["locked"]},
+        tenant_id=user.tenant_id,
+    )
+    logger.warning(
+        "全局运行模式切换：%s -> %s（操作人 %s）",
+        result.get("previous"), result["mode"], user.username,
+    )
+    return result
 
 
 @app.get("/metrics")
@@ -1593,7 +1726,7 @@ async def list_traces(
         "limit": max(1, min(int(limit), 500)),
         "offset": max(0, int(offset)),
         "tenant_id": tenant or "all",
-        "mode": MODE,
+        "mode": _mode(),
         "auth_enabled": AUTH_ENABLED,
         "gateway_url": PUBLIC_GATEWAY_URL,
         "mock_upstream": MOCK_UPSTREAM,
@@ -2181,6 +2314,126 @@ async def get_audit_views(trace_id: str, request: Request) -> Dict[str, Any]:
     return await anyio.to_thread.run_sync(_audit_views, record, trace_id)
 
 
+@app.get("/api/traces/{trace_id}/crew")
+async def trace_crew(trace_id: str, request: Request) -> Dict[str, Any]:
+    """审计小队分工详情；未执行过小队时返回 unavailable，不伪造结论。"""
+
+    user = _require(request, "viewer")
+    if STORE.get(trace_id, tenant_id=_tenant_scope(user)) is None:
+        raise HTTPException(status_code=404, detail="轨迹不存在")
+    record = _load_crew(trace_id)
+    if record is None:
+        return {
+            "trace_id": trace_id, "status": "unavailable",
+            "agents": [], "note": "该轨迹未执行审计小队",
+        }
+    return record
+
+
+_EVENT_OUTCOMES = frozenset(
+    {"requested", "attempted", "succeeded", "failed", "blocked", "unknown"}
+)
+_EVENT_FAMILIES = frozenset(
+    {"task.run", "model.invoke", "tool.invoke", "data.read",
+     "message.send", "approval.decide", "system.event"}
+)
+
+
+def _event_filter_args(outcome: Optional[str], action_family: Optional[str]) -> None:
+    if outcome and outcome not in _EVENT_OUTCOMES:
+        raise HTTPException(status_code=400, detail="outcome 不在允许取值内")
+    if action_family and action_family not in _EVENT_FAMILIES:
+        raise HTTPException(status_code=400, detail="action_family 不在允许取值内")
+
+
+@app.get("/api/traces/{trace_id}/events/tree")
+async def trace_event_tree(trace_id: str, request: Request) -> Dict[str, Any]:
+    """行为事件父子装配；父节点未观测到时显式列出缺口，不自动补造。"""
+
+    user = _require(request, "viewer")
+    tenant = _tenant_scope(user)
+    if STORE.get(trace_id, tenant_id=tenant) is None:
+        raise HTTPException(status_code=404, detail="轨迹不存在")
+    return await anyio.to_thread.run_sync(
+        lambda: EVENT_STORE.assemble_trace(trace_id, tenant_id=tenant)
+    )
+
+
+@app.get("/api/traces/{trace_id}/events")
+async def trace_events(
+    trace_id: str,
+    request: Request,
+    actor: Optional[str] = None,
+    tool: Optional[str] = None,
+    action_family: Optional[str] = None,
+    resource: Optional[str] = None,
+    outcome: Optional[str] = None,
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> Dict[str, Any]:
+    """按轨迹查询行为事实，并附带该轨迹当前覆盖状态。"""
+
+    user = _require(request, "viewer")
+    tenant = _tenant_scope(user)
+    if STORE.get(trace_id, tenant_id=tenant) is None:
+        raise HTTPException(status_code=404, detail="轨迹不存在")
+    _event_filter_args(outcome, action_family)
+    result = await anyio.to_thread.run_sync(
+        lambda: EVENT_STORE.list_events(
+            tenant_id=tenant, trace_id=trace_id, actor=actor, tool=tool,
+            action_family=action_family, resource=resource, outcome=outcome,
+            start=start, end=end, limit=limit, offset=offset,
+        )
+    )
+    coverage = await anyio.to_thread.run_sync(
+        lambda: EVENT_STORE.coverage(trace_id, tenant_id=tenant)
+    )
+    return {"trace_id": trace_id, "coverage": coverage, **result}
+
+
+@app.get("/api/events")
+async def list_events(
+    request: Request,
+    trace_id: Optional[str] = None,
+    actor: Optional[str] = None,
+    tool: Optional[str] = None,
+    action_family: Optional[str] = None,
+    resource: Optional[str] = None,
+    outcome: Optional[str] = None,
+    start: Optional[str] = None,
+    end: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> Dict[str, Any]:
+    """跨轨迹查询行为事实；非管理员只在自己的租户与可见 Agent 内查询。"""
+
+    user = _require(request, "viewer")
+    tenant = _tenant_scope(user)
+    allowed = _allowed_agent_ids(user)
+    if actor and allowed is not None and actor not in allowed:
+        raise HTTPException(status_code=403, detail="无权查询该智能体的事件")
+    _event_filter_args(outcome, action_family)
+    result = await anyio.to_thread.run_sync(
+        lambda: EVENT_STORE.list_events(
+            tenant_id=tenant, trace_id=trace_id, actor=actor, tool=tool,
+            action_family=action_family, resource=resource, outcome=outcome,
+            start=start, end=end, limit=limit, offset=offset,
+        )
+    )
+    return {"tenant_id": tenant or "all", **result}
+
+
+@app.get("/api/resources")
+async def list_resources(request: Request, limit: int = 200) -> Dict[str, Any]:
+    user = _require(request, "viewer")
+    items = await anyio.to_thread.run_sync(
+        lambda: EVENT_STORE.list_resources(tenant_id=_tenant_scope(user), limit=limit)
+    )
+    return {"resources": items}
+
+
 
 @app.get("/api/audit/metrics")
 async def audit_metrics(request: Request) -> Dict[str, Any]:
@@ -2677,13 +2930,23 @@ async def redteam(request: Request) -> Dict[str, Any]:
     except Exception:
         payload = {}
     prompts = payload.get("prompts") if isinstance(payload.get("prompts"), list) else None
+    generated: List[str] = []
+    if payload.get("generate") and prompts is None:
+        config = _judge_config(_model_snapshot().registry)
+        if config is not None:
+            generated = await eval_mod.generate_prompts(config, count=6)
+        prompts = list(eval_mod.REDTEAM_PROMPTS) + generated
     report = eval_mod.run_redteam(prompts)
     AUDIT_LOG.log(
         user.username, "eval.redteam", report.report_id,
-        {"total": report.total, "detected": report.detected},
+        {"total": report.total, "detected": report.detected, "generated": len(generated)},
         tenant_id=user.tenant_id,
     )
-    return {"report": report.model_dump(mode="json")}
+    return {
+        "report": report.model_dump(mode="json"),
+        "generated": generated,
+        "generated_count": len(generated),
+    }
 
 
 def _retention_policy(payload: Optional[Dict[str, Any]] = None) -> retention.RetentionPolicy:
@@ -2878,6 +3141,79 @@ async def test_model(request: Request) -> Dict[str, Any]:
         _MODEL_TEST_BUSY = False
     return {"success": category == "ok", "category": category,
             "elapsed_ms": round((time.monotonic() - started) * 1000), "revision": snapshot.revision}
+
+
+@app.get("/api/admin/audit-params")
+async def get_audit_params(request: Request) -> Dict[str, Any]:
+    """裁判参数：超时、重试、输出上限、轨迹输入上限与知识库召回条数。"""
+
+    _model_admin(request)
+    return AUDIT_PARAMS.public()
+
+
+@app.put("/api/admin/audit-params")
+async def save_audit_params(request: Request) -> Dict[str, Any]:
+    user = _model_admin(request)
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="请求体必须是 JSON")
+    values = payload.get("params", payload) if isinstance(payload, dict) else payload
+    try:
+        result = AUDIT_PARAMS.save(values, updated_by=user.username)
+    except AuditParamsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message)
+    AUDIT_LOG.log(
+        user.username, "settings.audit_params", "audit-params",
+        {"params": result["params"]}, tenant_id=user.tenant_id,
+    )
+    logger.warning("审计参数已更新（操作人 %s）：%s", user.username, result["params"])
+    return result
+
+
+@app.get("/api/admin/kb")
+async def kb_status(request: Request) -> Dict[str, Any]:
+    _model_admin(request)
+    return dict(default_kb().stats())
+
+
+@app.post("/api/admin/kb/rebuild")
+async def kb_rebuild(request: Request) -> Dict[str, Any]:
+    user = _model_admin(request)
+    kb = default_kb()
+    chunks = await anyio.to_thread.run_sync(kb.rebuild)
+    AUDIT_LOG.log(
+        user.username, "settings.kb_rebuild", "knowledge-base",
+        {"chunks": int(chunks)}, tenant_id=user.tenant_id,
+    )
+    result = dict(kb.stats())
+    result["rebuilt"] = int(chunks)
+    return result
+
+
+@app.get("/api/admin/data-stats")
+async def data_stats(request: Request) -> Dict[str, Any]:
+    """数据管理页使用的实体计数与数据库体积。"""
+
+    _model_admin(request)
+    size = 0
+    for suffix in ("", "-wal", "-shm"):
+        path = Path(DB_PATH + suffix)
+        try:
+            size += path.stat().st_size
+        except OSError:
+            continue
+    return {
+        "db_ok": _db_healthy(),
+        "db_path": DB_PATH,
+        "db_size_bytes": size,
+        "traces": STORE.count_traces(),
+        "agents": len(AGENTS.list_agents()),
+        "approvals_pending": len(APPROVALS.list(status="proposed", limit=500)),
+        "policies": len(POLICY.list()),
+        "audit_events": AUDIT_LOG.count(),
+        "events": EVENT_STORE.counts(),
+    }
 
 
 @app.post("/v1/tool/check")
@@ -3435,6 +3771,67 @@ async def otlp_traces(request: Request, background: BackgroundTasks) -> Dict[str
             snapshot,
         )
     return {"accepted": len(trajectories), "trace_ids": [t.trace_id for t in trajectories]}
+
+
+@app.post("/v1/ingest/batch")
+async def ingest_batch(request: Request, background: BackgroundTasks) -> Dict[str, Any]:
+    """批量投递轨迹：逐条校验与失败隔离；重复投递由事件层幂等吸收。"""
+
+    snapshot = request.state.model_snapshot
+    try:
+        payload = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="请求体必须是 JSON")
+    items = payload.get("traces") if isinstance(payload, dict) else None
+    if not isinstance(items, list) or not items:
+        raise HTTPException(status_code=400, detail="traces 必须是至少包含一条轨迹的数组")
+    if len(items) > BATCH_INGEST_LIMIT:
+        raise HTTPException(
+            status_code=413,
+            detail="单批最多 %d 条轨迹" % BATCH_INGEST_LIMIT,
+        )
+    accepted: List[str] = []
+    rejected: List[Dict[str, Any]] = []
+    for index, raw in enumerate(items):
+        try:
+            if isinstance(raw, dict):
+                raw = dict(raw)
+                raw.setdefault("source", "sdk")
+                raw.setdefault("received_at", datetime.now().astimezone().isoformat())
+            trajectory = Trajectory.model_validate(raw)
+        except Exception:
+            # 不回显校验原文，避免把上游字段值写回响应或日志
+            rejected.append({"index": index, "reason": "轨迹校验失败"})
+            continue
+        if trajectory.tenant_id and trajectory.tenant_id != request.state.tenant_id:
+            rejected.append(
+                {"index": index, "trace_id": trajectory.trace_id, "reason": "轨迹租户与 Agent Key 不匹配"}
+            )
+            continue
+        trajectory.tenant_id = request.state.tenant_id
+        try:
+            _claim([(trajectory.trace_id, request.state.agent_id)])
+        except ValueError as exc:
+            rejected.append(
+                {"index": index, "trace_id": trajectory.trace_id, "reason": str(exc)}
+            )
+            continue
+        context = _resolve_context(trajectory.agent_id, request)
+        background.add_task(
+            process_trace,
+            trajectory,
+            context,
+            POLICY.resolve(trajectory.agent_id),
+            _effective_mode(trajectory.agent_id, request),
+            snapshot,
+        )
+        accepted.append(trajectory.trace_id)
+    return {
+        "accepted": len(accepted),
+        "rejected": len(rejected),
+        "trace_ids": accepted,
+        "errors": rejected,
+    }
 
 
 @app.post("/v1/ingest")

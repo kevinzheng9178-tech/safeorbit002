@@ -245,6 +245,14 @@ def test_management_roles_and_objects(server):
             assert (await client.get("/api/agents")).status_code == 200
             assert (await client.get("/api/agents/managed/keys")).status_code == 403
             assert (await client.patch("/api/agents/managed", json={"enabled": False})).status_code == 403
+            assert (await client.delete("/api/agents/managed")).status_code == 403
+            assert (await client.post("/api/auth/login", json={"username": "admin", "password": "Test-password-strong1!"})).status_code == 200
+            deleted = await client.delete("/api/agents/managed")
+            assert deleted.status_code == 200
+            assert deleted.json()["keys_deleted"] == 1
+            remaining = (await client.get("/api/agents")).json()["agents"]
+            assert all(item["agent_id"] != "managed" for item in remaining)
+            assert (await client.delete("/api/agents/managed")).status_code == 404
     run(scenario())
 
 

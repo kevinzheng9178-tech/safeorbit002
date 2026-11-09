@@ -20,6 +20,7 @@ SCOPES = {
     "/v1/tool/check": "tools:check",
     "/v1/traces": "traces:write",
     "/v1/ingest": "traces:write",
+    "/v1/ingest/batch": "traces:write",
 }
 OVERRIDE_HEADERS = {
     "x-safeorbit-mode", "x-safeorbit-budget", "x-safeorbit-write-threshold",

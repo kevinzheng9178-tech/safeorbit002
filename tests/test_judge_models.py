@@ -52,7 +52,10 @@ def registry_path(tmp_path):
 def config(registry_path, monkeypatch):
     monkeypatch.setenv("TEST_JUDGE_KEY", SECRET)
     monkeypatch.setenv("TEST_GATEWAY_KEY", UPSTREAM_SECRET)
-    return JudgeConfig.from_registry(ModelRegistry.load(registry_path))
+    cfg = JudgeConfig.from_registry(ModelRegistry.load(registry_path))
+    # 测试固定为“失败后重试一次”，线上默认值可独立调整
+    cfg.max_retries = 1
+    return cfg
 
 
 @pytest.fixture
@@ -173,7 +176,8 @@ def test_json_capability_and_empty_findings(
     payload = json.loads(request.content)
     assert payload["model"] == "independent-judge"
     assert payload["temperature"] == 0
-    assert payload["max_tokens"] == 800
+    # 结论需附原文摘录与引用编号，并为推理模型预留足够输出额度
+    assert payload["max_tokens"] == 3200
     assert [m["role"] for m in payload["messages"]] == ["system", "user"]
     assert "judge-test" in payload["messages"][1]["content"]
     assert SECRET not in request.content.decode()

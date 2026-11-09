@@ -8,6 +8,7 @@ import json
 import logging
 import sqlite3
 import sys
+from datetime import datetime, timezone
 
 import httpx
 import pytest
@@ -247,6 +248,180 @@ def test_system_status_reports_runtime_facts(server):
             assert body["mode"] in ("shadow", "enforce")
             assert isinstance(body["circuits"], dict)
             assert isinstance(body["counters"], dict)
+
+    run(scenario())
+
+
+def test_admin_can_switch_global_mode_with_audit_log(server):
+    async def scenario():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=server.app),
+            base_url="http://test",
+            headers={"X-SafeOrbit-CSRF": "1"},
+        ) as client:
+            login = await client.post(
+                "/api/auth/login",
+                json={"username": "admin", "password": "Test-password-strong1!"},
+            )
+            assert login.status_code == 200
+            switched = await client.post("/api/system/mode", json={"mode": "enforce"})
+            assert switched.status_code == 200
+            assert switched.json()["mode"] == "enforce"
+            assert switched.json()["previous"] == "shadow"
+            status = (await client.get("/api/system/status")).json()
+            assert status["mode"] == "enforce"
+            assert status["mode_source"] == "admin"
+            assert status["mode_locked"] is False
+            events = (await client.get("/api/audit-log?limit=20")).json()["events"]
+            assert any(item["action"] == "system.mode" for item in events)
+            invalid = await client.post("/api/system/mode", json={"mode": "block"})
+            assert invalid.status_code == 400
+            back = await client.post("/api/system/mode", json={"mode": "shadow"})
+            assert back.status_code == 200
+            assert back.json()["mode"] == "shadow"
+
+    run(scenario())
+
+
+def test_global_mode_switch_requires_admin(server):
+    server.AUTH_STORE.create_user("viewer1", "Test-password-strong1!", role="viewer")
+
+    async def scenario():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=server.app),
+            base_url="http://test",
+            headers={"X-SafeOrbit-CSRF": "1"},
+        ) as client:
+            login = await client.post(
+                "/api/auth/login",
+                json={"username": "viewer1", "password": "Test-password-strong1!"},
+            )
+            assert login.status_code == 200
+            return await client.post("/api/system/mode", json={"mode": "enforce"})
+
+    assert run(scenario()).status_code == 403
+
+
+def test_audit_params_and_data_stats_require_admin(server):
+    server.AUTH_STORE.create_user("viewer2", "Test-password-strong1!", role="viewer")
+
+    async def scenario():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=server.app),
+            base_url="http://test",
+            headers={"X-SafeOrbit-CSRF": "1"},
+        ) as client:
+            login = await client.post(
+                "/api/auth/login",
+                json={"username": "viewer2", "password": "Test-password-strong1!"},
+            )
+            assert login.status_code == 200
+            return await client.get("/api/admin/audit-params")
+
+    assert run(scenario()).status_code == 403
+
+
+def test_admin_can_tune_audit_params_and_read_data_stats(server):
+    async def scenario():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=server.app),
+            base_url="http://test",
+            headers={"X-SafeOrbit-CSRF": "1"},
+        ) as client:
+            login = await client.post(
+                "/api/auth/login",
+                json={"username": "admin", "password": "Test-password-strong1!"},
+            )
+            assert login.status_code == 200
+            current = (await client.get("/api/admin/audit-params")).json()
+            assert current["params"]["max_tokens"] == 3200
+            saved = await client.put(
+                "/api/admin/audit-params",
+                json={"params": {"max_tokens": 2048, "timeout_s": 45}},
+            )
+            assert saved.status_code == 200
+            assert saved.json()["params"]["max_tokens"] == 2048
+            assert saved.json()["params"]["timeout_s"] == 45.0
+            invalid = await client.put(
+                "/api/admin/audit-params", json={"params": {"timeout_s": 1}}
+            )
+            assert invalid.status_code == 400
+            stats = (await client.get("/api/admin/data-stats")).json()
+            assert stats["db_ok"] is True
+            assert stats["traces"] == 0
+            assert stats["agents"] == 0
+            assert stats["audit_events"] >= 1
+            kb = (await client.get("/api/admin/kb")).json()
+            assert "chunks" in kb and "tokenizer" in kb
+
+    run(scenario())
+
+
+def test_trace_events_api_and_tenant_scope(server):
+    """行为事件 API：可查询、可装配父子，跨租户默认拒绝。"""
+
+    from safeorbit.models import Span, SpanKind, ToolAttrs, Trajectory
+
+    now = datetime.now(timezone.utc)
+    trajectory = Trajectory(
+        trace_id="evt-api", tenant_id="default", agent_id="cs-agent",
+        started_at=now, received_at=now,
+        spans=[Span(
+            span_id="s1", kind=SpanKind.TOOL, name="send_email", start_time=now,
+            tool=ToolAttrs(
+                tool_name="send_email",
+                arguments={"to": "a@example.com"},
+                side_effect="write",
+            ),
+        )],
+    )
+    run(server.process_trace(trajectory, server.AuditContext()))
+    assert server.EVENT_STORE.counts(tenant_id="default")["events"] == 1
+
+    server.AUTH_STORE.create_user(
+        "tenantuser", "Test-password-strong1!", role="viewer", tenant_id="other"
+    )
+
+    async def scenario():
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=server.app),
+            base_url="http://test",
+            headers={"X-SafeOrbit-CSRF": "1"},
+        ) as client:
+            login = await client.post(
+                "/api/auth/login",
+                json={"username": "admin", "password": "Test-password-strong1!"},
+            )
+            assert login.status_code == 200
+            events = await client.get("/api/traces/evt-api/events")
+            assert events.status_code == 200
+            body = events.json()
+            assert body["total"] == 1
+            assert body["events"][0]["action_family"] == "tool.invoke"
+            assert body["events"][0]["outcome"] == "succeeded"
+            assert body["coverage"]["capture_status"] == "complete"
+            tree = await client.get("/api/traces/evt-api/events/tree")
+            assert tree.status_code == 200 and tree.json()["total"] == 1
+            invalid = await client.get("/api/traces/evt-api/events?outcome=owned")
+            assert invalid.status_code == 400
+            cross = await client.get("/api/events?actor=cs-agent")
+            assert cross.status_code == 200 and cross.json()["total"] == 1
+            resources = await client.get("/api/resources")
+            assert resources.status_code == 200
+            assert resources.json()["resources"][0]["resource_type"] == "email"
+
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=server.app),
+            base_url="http://test",
+            headers={"X-SafeOrbit-CSRF": "1"},
+        ) as other:
+            login = await other.post(
+                "/api/auth/login",
+                json={"username": "tenantuser", "password": "Test-password-strong1!"},
+            )
+            assert login.status_code == 200
+            assert (await other.get("/api/traces/evt-api/events")).status_code == 404
+            assert (await other.get("/api/events")).json()["total"] == 0
 
     run(scenario())
 

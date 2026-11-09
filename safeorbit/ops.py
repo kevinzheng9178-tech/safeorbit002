@@ -89,6 +89,11 @@ class AuditLog:
             # 审计日志失败不能影响主流程
             return
 
+    def count(self) -> int:
+        with self._connect() as connection:
+            row = connection.execute("SELECT COUNT(*) AS c FROM audit_events").fetchone()
+        return int(row["c"]) if row else 0
+
     def list(self, limit: int = 100, tenant_id: Optional[str] = None) -> List[Dict[str, Any]]:
         query = "SELECT * FROM audit_events"
         params: List[Any] = []

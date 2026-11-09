@@ -121,6 +121,23 @@ class AgentStore:
             row = connection.execute("SELECT * FROM agents WHERE agent_id = ?", (agent_id,)).fetchone()
         return dict(row, enabled=bool(row["enabled"]))
 
+    def delete_agent(self, agent_id: str) -> Dict[str, Any]:
+        """删除智能体及其全部 Key；历史轨迹与报告保留，便于事后追溯。"""
+
+        _validate_agent_id(agent_id)
+        with self._connect() as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            row = connection.execute(
+                "SELECT agent_id, tenant_id FROM agents WHERE agent_id = ?", (agent_id,)
+            ).fetchone()
+            if row is None:
+                raise ValueError("Agent 不存在")
+            keys = connection.execute(
+                "DELETE FROM agent_keys WHERE agent_id = ?", (agent_id,)
+            ).rowcount
+            connection.execute("DELETE FROM agents WHERE agent_id = ?", (agent_id,))
+        return {"agent_id": agent_id, "tenant_id": row["tenant_id"], "keys_deleted": keys}
+
     def issue_key(self, agent_id: str, scopes: List[str], expires_at: Optional[str] = None) -> Dict[str, Any]:
         _validate_agent_id(agent_id)
         if (not isinstance(scopes, (list, tuple, set)) or not scopes

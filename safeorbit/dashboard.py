@@ -32,18 +32,11 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       linear-gradient(to bottom, #4ed3b80a 1px, transparent 1px);
     background-size: 56px 56px;
     -webkit-mask-image: radial-gradient(ellipse 82% 74% at 62% 26%, #000 16%, transparent 84%);
-    mask-image: radial-gradient(ellipse 82% 74% at 62% 26%, #000 16%, transparent 84%);
-    animation: bgDrift 32s linear infinite; }
+    mask-image: radial-gradient(ellipse 82% 74% at 62% 26%, #000 16%, transparent 84%); }
   .bg-halo { position: absolute; width: 760px; height: 760px; right: -200px; top: -280px;
-    background: radial-gradient(circle, #4ed3b812 0%, #4ed3b807 40%, transparent 68%);
-    animation: bgHalo 24s ease-in-out infinite alternate; }
+    background: radial-gradient(circle, #4ed3b812 0%, #4ed3b807 40%, transparent 68%); }
   .bg-scan { position: absolute; left: 0; right: 0; height: 220px; top: 0;
-    background: linear-gradient(to bottom, transparent, #4ed3b808 32%, #8ff0dc1c 50%, #4ed3b808 68%, transparent);
-    animation: bgScan 18s linear infinite; }
-  @keyframes bgDrift { to { transform: translate3d(-56px, -56px, 0); } }
-  @keyframes bgHalo { from { transform: translate3d(0, 0, 0) scale(1); opacity: .65; }
-    to { transform: translate3d(-70px, 48px, 0) scale(1.14); opacity: 1; } }
-  @keyframes bgScan { from { transform: translate3d(0, -240px, 0); } to { transform: translate3d(0, 100vh, 0); } }
+    background: linear-gradient(to bottom, transparent, #4ed3b808 32%, #8ff0dc1c 50%, #4ed3b808 68%, transparent); }
   .sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 32px 18px 24px;
     background: #14191c; border-right: 1px solid var(--line); display: flex; flex-direction: column; }
   .brand { font-size: 25px; font-weight: 750; letter-spacing: -.8px; padding: 0 14px; line-height: 1.3; }
@@ -99,6 +92,42 @@ DASHBOARD_HTML = """<!DOCTYPE html>
   .card { min-width: 0; background: var(--card); border: 1px solid var(--line); border-radius: 10px;
     padding: 22px; box-shadow: 0 4px 14px #00000012; }
   .card.wide { margin-top: 22px; }
+  .mode-row { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .mode-row .field { flex: 0 0 300px; }
+  .mode-row .mode-note { color: var(--muted); font-size: 13px; padding-bottom: 10px; }
+  .sys-switch { display: flex; gap: 10px; margin: 0 0 18px; flex-wrap: wrap; }
+  .sys-switch-btn { flex: 1 1 220px; display: flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 13px 18px; border-radius: 9px; border: 1px solid var(--line);
+    background: var(--card); color: var(--muted); font-weight: 600; cursor: pointer;
+    transition: border-color .18s ease, background .18s ease, color .18s ease; }
+  .sys-switch-btn:hover { border-color: #3a4a52; color: var(--ink); }
+  .sys-switch-btn.active { background: var(--accent-bg); border-color: #2c5149; color: #90e3d2;
+    box-shadow: inset 0 0 0 1px #65d6c133; }
+  .sys-subtabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; }
+  .sys-subtab { padding: 8px 14px; border-radius: 7px; border: 1px solid var(--line);
+    background: transparent; color: var(--muted); cursor: pointer; font-size: 14px; }
+  .sys-subtab:hover { color: var(--ink); border-color: #3a4a52; }
+  .sys-subtab.active { background: var(--surface); border-color: #3a4a52; color: var(--ink); }
+  .sys-subpane { display: none; }
+  .sys-subpane.active { display: block; }
+  .params-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px; margin: 0 0 16px; }
+  .param-item { background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; min-width: 0; }
+  .param-item .k { color: var(--muted); font-size: 12.5px; letter-spacing: .3px; }
+  .param-item .v { font-size: 21px; font-weight: 600; margin-top: 6px; line-height: 1.35;
+    font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+  #crew-panel { margin: 14px 0 6px; }
+  .crew-title { color: var(--muted); font-size: 13px; margin-bottom: 10px; }
+  .crew-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .crew-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--surface); }
+  .crew-name { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; }
+  .crew-state { color: var(--muted); font-size: 12px; font-weight: 400; }
+  .crew-meta { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .crew-cites { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .crew-cite { font-size: 12px; color: #b5d5cc; border: 1px solid #2c5149; border-radius: 5px;
+    padding: 2px 7px; background: #16211f; }
   details.card { padding: 0; overflow: hidden; }
   details.card > summary { list-style: none; cursor: pointer; display: flex; align-items: center;
     justify-content: space-between; gap: 14px; padding: 18px 22px; min-height: 58px; }
@@ -715,58 +744,121 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     .chain-step { grid-template-columns: minmax(0, 1fr); gap: 4px; }
   }
   /* ============================================================
-     三层信息架构：L1 图标栏 / L2 导航 / L3 主内容 + 工具条 + 抽屉
+     Linear 式单侧边栏：固定模块 + 任务组 + 底部身份 / L3 主内容
      ============================================================ */
-  .app { position: relative; z-index: 1; display: grid;
-    grid-template-columns: 52px var(--l2w, 260px) minmax(0, 1fr); height: 100vh; overflow: hidden; }
-  /* L1：52px 图标栏 */
-  .l1 { position: relative; z-index: 56; display: flex; flex-direction: column; align-items: center;
-    gap: 4px; padding: 10px 0 12px; background: #0a0b0d; border-right: 1px solid var(--line); }
-  .l1-logo { width: 30px; height: 30px; display: grid; place-items: center; margin-bottom: 10px;
-    border: 1px solid #2a2d32; border-radius: 7px; color: var(--blue); font-size: 13px; font-weight: 700; }
-  .l1-nav { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-  .l1-btn { position: relative; width: 34px; height: 34px; padding: 0; display: grid; place-items: center;
-    border: 1px solid transparent; border-radius: 6px; background: transparent; color: #8b9098; }
-  .l1-btn svg { width: 17px; height: 17px; }
-  .l1-btn:hover { background: rgba(255, 255, 255, .05); color: #e4e6e8; }
-  .l1-btn.active { background: rgba(255, 255, 255, .08); color: #f7f8f8; }
-  .l1-btn[data-tip]::after { content: attr(data-tip); position: absolute; left: 44px; top: 50%;
-    transform: translateY(-50%); padding: 4px 8px; border-radius: 5px; background: #16171a;
-    border: 1px solid #2a2d32; color: #e4e6e8; font-size: 11.5px; white-space: nowrap;
-    opacity: 0; pointer-events: none; transition: opacity .12s ease; z-index: 80; }
-  .l1-btn[data-tip]:hover::after, .l1-btn[data-tip]:focus-visible::after { opacity: 1; }
-  .l1-settings { margin-top: auto; }
-  .l1-badge { position: absolute; top: -3px; right: -3px; min-width: 14px; height: 14px; padding: 0 3px;
-    border-radius: 7px; background: #f0736f; color: #1a0d0c; font-size: 9px; line-height: 14px; text-align: center; }
-  /* L2：导航栏（可拖拽调宽 / 折叠为浮层） */
-  .l2 { display: flex; flex-direction: column; min-width: 0; overflow: hidden;
-    background: #0c0d0f; border-right: 1px solid var(--line); position: relative; }
-  .l2-head { flex: 0 0 44px; height: 44px; display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; padding: 0 12px; border-bottom: 1px solid var(--line); font-size: 12.5px; font-weight: 600; }
-  .l2-head button { padding: 2px 6px; font-size: 11.5px; }
-  .l2-body { flex: 1; overflow-y: auto; padding: 4px 0 14px; }
-  .l2.collapsed { border-right: 0; }
-  tbody tr.active-row { background: rgba(78, 211, 184, .07); }
-  .l2-resizer { position: absolute; top: 0; right: -2px; width: 5px; height: 100%;
+  .app { position: relative; z-index: 1; display: flex; align-items: flex-start; min-height: 100vh; }
+  .side { flex: 0 0 auto; width: var(--sidew, 252px); position: sticky; top: 0; height: 100vh;
+    overflow-y: auto; z-index: 56; display: flex; flex-direction: column; min-width: 0;
+    background: #0a0b0d; border-right: 1px solid var(--line); }
+  .side-brand { flex: 0 0 44px; display: flex; align-items: center; gap: 9px; padding: 0 8px 0 12px;
+    border-bottom: 1px solid #17181b; }
+  .side-brand .mark { width: 24px; height: 24px; flex: 0 0 auto; display: grid; place-items: center;
+    border: 1px solid #2a2d32; border-radius: 6px; color: var(--blue); font-size: 12px; font-weight: 700; }
+  .side-brand .name { min-width: 0; font-size: 13px; font-weight: 600; color: #f2f4f6; white-space: nowrap; }
+  .side-brand .name small { margin-left: 5px; color: #6d727a; font-size: 11px; font-weight: 500; }
+  .side-brand .icon-btn { margin-left: auto; padding: 2px 6px; font-size: 11.5px; }
+  .side-scroll { flex: 1; overflow-y: auto; padding: 8px 8px 14px; }
+  .side-block { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 9px;
+    width: 100%; min-height: 32px; padding: 0 8px; border: 1px solid transparent; border-radius: 6px;
+    background: transparent; color: #c8cdd3; font-size: 13px; text-align: left; cursor: pointer; }
+  .side-block svg { width: 16px; height: 16px; }
+  .side-block:hover { background: rgba(255, 255, 255, .05); color: #f0f2f4; }
+  .side-block.active { background: rgba(255, 255, 255, .08); color: #fff; }
+  .side-block .caret { color: #6d727a; font-size: 10px; transition: transform .15s ease; }
+  .side-block[aria-expanded="true"] .caret { transform: rotate(90deg); }
+  .side-sub { margin: 2px 0 6px 17px; padding-left: 9px; border-left: 1px solid #1d1f23; }
+  .side-sub-row { display: flex; align-items: center; gap: 8px; width: 100%; padding: 5px 8px;
+    border: 1px solid transparent; border-radius: 5px; background: transparent;
+    color: #9aa0a8; font-size: 12.5px; text-align: left; cursor: pointer; }
+  .side-sub-row:hover { background: rgba(255, 255, 255, .04); color: #e8ebee; }
+  .side-sub-row.active { background: rgba(255, 255, 255, .07); color: #fff; }
+  .side-sub-row .side-count { margin-left: auto; min-width: 16px; padding: 0 4px; border-radius: 8px;
+    background: rgba(240, 115, 111, .16); color: #f0938f; font-size: 10px; line-height: 16px; text-align: center; }
+  .side-group { margin-top: 14px; }
+  .side-group-head { display: flex; align-items: center; gap: 2px; padding: 0; }
+  .side-group-toggle { flex: 1; min-width: 0; display: grid;
+    grid-template-columns: 18px minmax(0, 1fr) auto auto; align-items: center; gap: 9px;
+    min-height: 32px; padding: 0 7px; border: 1px solid transparent; border-radius: 6px;
+    background: transparent; color: #c8cdd3; font-size: 13px; text-align: left; cursor: pointer; }
+  .side-group-toggle svg { width: 16px; height: 16px; }
+  .side-group-toggle:hover { background: rgba(255, 255, 255, .05); color: #f0f2f4; }
+  .side-group-toggle .count { color: #5b6168; font-size: 10.5px; }
+  .side-group-toggle .caret { color: #6d727a; font-size: 10px; transition: transform .15s ease; }
+  .side-group-toggle[aria-expanded="true"] .caret { transform: rotate(90deg); }
+  .side-add { margin-left: 2px; padding: 0 6px; border: 1px solid #24272b; border-radius: 4px; background: transparent;
+    color: #8b929a; font-size: 11px; line-height: 16px; cursor: pointer; }
+  .side-add:hover { border-color: #3a3f45; color: #e6e9ec; }
+  .side-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px;
+    width: 100%; padding: 6px 8px; border: 1px solid transparent; border-radius: 6px; background: transparent;
+    color: #c3c8ce; font-size: 12.5px; text-align: left; cursor: pointer; }
+  .side-item:hover { background: rgba(255, 255, 255, .04); color: #eef0f2; }
+  .side-item.active { background: rgba(78, 211, 184, .08); color: #fff; }
+  .side-item .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .side-item .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .side-item .meta { color: #6f757d; font-size: 10.5px; white-space: nowrap; }
+  .side-item .meta b { color: #f0938f; font-weight: 600; }
+  .side-empty { padding: 6px 8px; color: #5f656d; font-size: 11.5px; line-height: 1.6; }
+  .side-foot { flex: 0 0 auto; padding: 8px; border-top: 1px solid #17181b; }
+  .side-user { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 9px;
+    width: 100%; padding: 6px 8px; border: 1px solid transparent; border-radius: 6px;
+    background: transparent; color: #c8cdd3; text-align: left; cursor: pointer; }
+  .side-user:hover { background: rgba(255, 255, 255, .05); }
+  .side-user.active { background: rgba(255, 255, 255, .08); }
+  .side-user .avatar { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%;
+    border: 1px solid #2a2d32; background: #1a1d21; color: #cfd4d9; font-size: 11px; font-weight: 600; }
+  .side-user .who { min-width: 0; display: flex; flex-direction: column; line-height: 1.35; }
+  .side-user .who b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    color: #e7eaed; font-size: 12.5px; font-weight: 600; }
+  .side-user .who span { color: #6f757d; font-size: 10.5px; }
+  .side-user .gear { color: #6f757d; font-size: 13px; }
+  .side-resizer { position: absolute; top: 0; right: -2px; width: 5px; height: 100%;
     cursor: col-resize; z-index: 2; }
-  .l2-resizer:hover { background: rgba(78, 211, 184, .22); }
-  .l2-section { display: flex; align-items: center; justify-content: space-between; gap: 8px;
-    padding: 10px 12px 4px; color: #6d727a; font-size: 10.5px; letter-spacing: .08em; }
-  .l2-section span { color: #6d727a; letter-spacing: 0; }
-  .l2-row { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; align-items: center;
-    width: 100%; padding: 6px 12px; border: 0; border-radius: 0; background: transparent;
-    color: #c3c8ce; font-size: 12.5px; line-height: 1.4; text-align: left; cursor: pointer; }
-  .l2-row:hover { background: rgba(255, 255, 255, .04); color: #e9ebee; }
-  .l2-row.active { background: rgba(255, 255, 255, .07); color: #fff; }
-  .l2-row .dot { width: 6px; height: 6px; }
-  .l2-row .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .l2-row .meta { color: #7f858d; font-size: 11px; white-space: nowrap; }
-  .l2-row .meta.hot { color: #f0938f; }
+  .side-resizer:hover { background: rgba(78, 211, 184, .22); }
+  .side-scrim { position: fixed; inset: 0; z-index: 54; background: rgba(0, 0, 0, .45); }
+  tbody tr.active-row { background: rgba(78, 211, 184, .07); }
   .l2-empty { padding: 14px 12px; color: #6d727a; font-size: 12px; }
   .l2-hint { padding: 8px 12px 0; color: #6d727a; font-size: 11px; line-height: 1.6; }
-  .l2-scrim { position: fixed; inset: 0; z-index: 54; background: rgba(0, 0, 0, .4); }
+  /* Agent 工作台 */
+  .agent-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px;
+    padding: 4px 0 16px; border-bottom: 1px solid var(--line); }
+  .agent-hero h2 { margin: 2px 0 4px; font-size: 20px; font-weight: 600; }
+  .agent-hero .agent-hero-meta { color: #8b9098; font-size: 12.5px; line-height: 1.7; }
+  .agent-tabs { display: flex; gap: 2px; padding: 10px 0 0; border-bottom: 1px solid var(--line); }
+  .agent-tab { padding: 7px 12px; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+    background: transparent; color: #8b9098; font-size: 13px; cursor: pointer; }
+  .agent-tab:hover { color: #e4e6e8; }
+  .agent-tab.active { border-bottom-color: var(--green); color: #f7f8f8; }
+  .agent-body { padding-top: 16px; }
+  .agent-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+  .agent-stat { padding: 14px; border: 1px solid var(--line); border-radius: 7px; background: #0d0e10; }
+  .agent-stat .k { color: #7f858d; font-size: 11px; }
+  .agent-stat .v { margin-top: 6px; font-size: 20px; font-weight: 600; }
+  .agent-stat .s { margin-top: 2px; color: #6f757d; font-size: 10.5px; }
+  .agent-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .agent-form-note { padding: 10px 12px; border: 1px dashed #26292e; border-radius: 7px;
+    color: #8b9098; font-size: 12px; line-height: 1.7; }
+  .task-list { display: flex; flex-direction: column; gap: 6px; }
+  .task-row { display: grid; grid-template-columns: auto minmax(0, 1fr) 120px 80px; gap: 10px;
+    align-items: center; width: 100%; padding: 9px 12px; border: 1px solid var(--line);
+    border-radius: 6px; background: #0d0e10; color: #d6d9dd; font-size: 12.5px; text-align: left; cursor: pointer; }
+  .task-row:hover { border-color: #33373d; background: #101114; }
+  .task-row .meta { color: #7f858d; font-size: 11.5px; text-align: right; }
+  .task-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px;
+    padding: 4px 0 16px; border-bottom: 1px solid var(--line); }
+  .task-head h2 { margin: 2px 0 4px; font-size: 19px; font-weight: 600; }
+  .task-body { padding-top: 16px; }
+  .account-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 16px; }
+  .account-grid .card { margin: 0; }
+  .kv { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 12px; font-size: 12.5px; }
+  .kv div { display: flex; justify-content: space-between; gap: 10px; }
+  .kv span { color: #7f858d; }
+  @media (max-width: 1100px) {
+    .account-grid { grid-template-columns: minmax(0, 1fr); }
+    .agent-grid { grid-template-columns: minmax(0, 1fr); }
+    .agent-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   /* L3：主内容 + 44px 工具条 */
-  .l3 { display: flex; flex-direction: column; min-width: 0; overflow: hidden; background: var(--bg); }
+  .l3 { flex: 1 1 auto; min-width: 0; background: var(--bg); }
   .toolbar { flex: 0 0 44px; height: 44px; display: flex; align-items: center; gap: 10px;
     padding: 0 14px; border-bottom: 1px solid var(--line); background: #0b0c0e; }
   .crumb { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 12.5px; color: #8b9098; }
@@ -777,10 +869,10 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     background: transparent; color: #8b9098; }
   .tb-seg:hover { background: rgba(255, 255, 255, .04); color: #d6d9dd; }
   .tb-seg.active { background: rgba(255, 255, 255, .07); color: #f7f8f8; }
-  button.l2-row, button.run-item, button.palette-item, button.tb-seg { border-color: transparent; }
-  button.l2-row:hover, button.run-item:hover, button.palette-item:hover {
+  button.run-item, button.palette-item, button.tb-seg, button.side-item, button.side-block { border-color: transparent; }
+  button.run-item:hover, button.palette-item:hover, button.side-item:hover, button.side-block:hover {
     background: rgba(255, 255, 255, .04); border-color: transparent; }
-  button.l2-row.active, button.l2-row.active:hover, button.run-item.active { background: rgba(255, 255, 255, .07); }
+  button.run-item.active, button.side-item.active, button.side-block.active { background: rgba(255, 255, 255, .07); }
   .tb-nav { flex: 0 0 auto; width: 28px; height: 28px; padding: 0; display: grid; place-items: center;
     border-color: transparent; background: transparent; color: #9aa0a8; }
   button.tb-nav:hover { background: rgba(255, 255, 255, .06); border-color: transparent; color: #f7f8f8; }
@@ -788,7 +880,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
   .tb-right .pill { flex: 0 0 auto; }
   kbd { padding: 0 4px; border: 1px solid #2a2d32; border-bottom-width: 2px; border-radius: 4px;
     background: #141519; color: #9aa0a8; font-family: inherit; font-size: 10.5px; }
-  .l3-body { flex: 1; overflow: auto; padding: 0 20px 24px; }
+  .l3-body { padding: 0 20px 24px; }
   .l3-body .page-heading { display: none; }
   .l3-body .panel.active { display: block; padding-top: 16px; }
   /* 运行列表（时间线 / 表格 / 按 Agent 分组） */
@@ -844,58 +936,59 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     padding: 5px 0; border-bottom: 1px solid #17181b; }
   .apd-impact .row:last-child { border-bottom: 0; }
   .apd-count { color: #f0938f; font-variant-numeric: tabular-nums; }
-  /* 使用导航：整页引导 */
-  .guide-hero { position: relative; overflow: hidden; display: grid;
-    grid-template-columns: minmax(0, 1fr) 170px; gap: 28px; align-items: center;
-    padding: 30px 32px; margin-bottom: 12px; border: 1px solid var(--line); border-radius: 8px;
-    background:
-      radial-gradient(620px 260px at 12% -20%, rgba(78, 211, 184, .14), transparent 70%),
-      radial-gradient(420px 240px at 96% 120%, rgba(96, 122, 190, .10), transparent 72%),
-      #0d0e10; }
-  .guide-hero h2 { margin: 6px 0 10px; font-size: 25px; font-weight: 600; letter-spacing: -.025em; }
-  .guide-hero p { margin: 0; max-width: 62ch; color: #9ba1a9; font-size: 13px; line-height: 1.8; }
-  .guide-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
-  .guide-next { margin-top: 14px; padding: 3px 0 3px 10px; border-left: 2px solid rgba(78, 211, 184, .55);
-    color: #b9d6cf; font-size: 12.5px; }
+  /* 使用导航：整页引导（低对比、无盒子，参照 Linear 的列表感） */
+  .guide-hero { position: relative; display: grid;
+    grid-template-columns: minmax(0, 1fr) 150px; gap: 24px; align-items: center;
+    padding: 4px 0 20px; margin-bottom: 6px; border: 0; border-bottom: 1px solid #1b1d21;
+    border-radius: 0; background: transparent; }
+  .guide-hero h2 { margin: 4px 0 8px; font-size: 21px; font-weight: 600; letter-spacing: -.02em; }
+  .guide-hero p { margin: 0; max-width: 68ch; color: #8b9199; font-size: 12.5px; line-height: 1.75; }
+  .guide-hero-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+  .guide-next { margin-top: 12px; padding: 2px 0 2px 10px; border-left: 2px solid rgba(78, 211, 184, .35);
+    color: #94a6a1; font-size: 12px; }
   .guide-progress { position: relative; display: grid; place-items: center; }
-  .guide-ring { width: 132px; height: 132px; transform: rotate(-90deg); }
-  .guide-ring circle { fill: none; stroke-width: 6; }
-  .guide-ring .ring-track { stroke: rgba(255, 255, 255, .07); }
+  .guide-ring { width: 104px; height: 104px; transform: rotate(-90deg); }
+  .guide-ring circle { fill: none; stroke-width: 4; }
+  .guide-ring .ring-track { stroke: rgba(255, 255, 255, .06); }
   .guide-ring .ring-value { stroke: var(--blue); stroke-linecap: round;
     stroke-dasharray: 326.7; stroke-dashoffset: 326.7; transition: stroke-dashoffset .5s ease; }
   .guide-progress-text { position: absolute; text-align: center; }
-  .guide-progress-text b { display: block; font-size: 20px; font-weight: 600; letter-spacing: -.02em; }
-  .guide-progress-text span { color: #7f858d; font-size: 10.5px; }
-  .guide-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 22px; }
-  .guide-metric { display: flex; flex-direction: column; gap: 2px; padding: 12px 14px; text-align: left;
-    border: 1px solid var(--line); border-radius: 7px; background: #0d0e10; }
-  .guide-metric:hover { background: #121316; border-color: #33363b; }
-  button.guide-metric { border-color: var(--line); background: #0d0e10; }
-  button.guide-metric:hover { background: #121316; border-color: #33363b; }
+  .guide-progress-text b { display: block; font-size: 16px; font-weight: 600; letter-spacing: -.02em; }
+  .guide-progress-text span { color: #6f757d; font-size: 10px; }
+  .guide-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+    margin-bottom: 20px; border-bottom: 1px solid #1b1d21; }
+  .guide-metric { display: flex; flex-direction: column; gap: 1px; padding: 12px 0 14px 16px;
+    text-align: left; border: 0; border-radius: 0; background: transparent; }
+  .guide-metric:first-child { padding-left: 0; }
+  .guide-metric + .guide-metric { border-left: 1px solid #1b1d21; }
+  .guide-metric:hover, button.guide-metric:hover { background: transparent; border-color: #1b1d21; }
+  button.guide-metric { border: 0; border-radius: 0; background: transparent; }
   .guide-metric .k { color: #7f858d; font-size: 10.5px; }
-  .guide-metric b { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .guide-metric b { font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
   .guide-metric .s { color: #6d727a; font-size: 10.5px; }
-  .guide-section { margin-bottom: 24px; }
-  .guide-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
-  .guide-section-head h3 { margin: 0; font-size: 13px; font-weight: 600; color: #d6d9dd; }
-  .guide-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-  .guide-card { display: flex; flex-direction: column; padding: 16px; border: 1px solid var(--line);
-    border-radius: 7px; background: #0d0e10; }
+  .guide-section { margin-bottom: 20px; }
+  .guide-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 2px; }
+  .guide-section-head h3 { margin: 0; font-size: 12px; font-weight: 600; color: #a9aeb5; }
+  .guide-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .guide-card { display: flex; flex-direction: column; padding: 13px 0; border: 0;
+    border-bottom: 1px solid #1b1d21; border-radius: 0; background: transparent; }
   .guide-card-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .guide-num { font: 11px "Cascadia Code", Consolas, monospace; letter-spacing: .1em; color: #6d727a; }
-  .guide-state { font-size: 10.5px; color: #7f858d; }
-  .guide-card.done { border-color: rgba(78, 201, 163, .28); }
-  .guide-card.done .guide-state { color: var(--green); }
-  .guide-card.done .guide-num { color: var(--green); }
-  .guide-card h4 { margin: 8px 0 5px; font-size: 13.5px; font-weight: 600; }
-  .guide-card p { margin: 0 0 12px; color: #9aa0a8; font-size: 12.5px; line-height: 1.7; }
+  .guide-num { font: 10.5px "Cascadia Code", Consolas, monospace; letter-spacing: .1em; color: #5f656d; }
+  .guide-state { font-size: 10.5px; color: #6f757d; }
+  .guide-card.done { border-color: #1b1d21; }
+  .guide-card.done .guide-state { color: #6fd7b6; }
+  .guide-card.done .guide-num { color: #6fd7b6; }
+  .guide-card h4 { margin: 3px 0 3px; font-size: 13px; font-weight: 600; }
+  .guide-card p { margin: 0 0 8px; color: #8b9199; font-size: 12px; line-height: 1.65; }
   .guide-card-actions { margin-top: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .guide-code { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; }
+  .guide-code { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
   .guide-code code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-  .guide-paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-  .guide-path { padding: 16px; border: 1px solid var(--line); border-radius: 7px; background: transparent; }
-  .guide-path h4 { margin: 0 0 5px; font-size: 13px; font-weight: 600; }
-  .guide-path p { margin: 0 0 12px; color: #9aa0a8; font-size: 12.5px; line-height: 1.7; }
+  .guide-paths { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0;
+    border-top: 1px solid #1b1d21; }
+  .guide-path { padding: 12px 16px 2px 0; border: 0; border-radius: 0; background: transparent; }
+  .guide-path + .guide-path { padding-left: 16px; border-left: 1px solid #1b1d21; }
+  .guide-path h4 { margin: 0 0 3px; font-size: 12.5px; font-weight: 600; }
+  .guide-path p { margin: 0 0 8px; color: #8b9199; font-size: 12px; line-height: 1.65; }
   @media (max-width: 1023px) {
     .guide-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .guide-paths { grid-template-columns: minmax(0, 1fr); }
@@ -905,15 +998,60 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     .guide-progress { display: none; }
     .guide-cards { grid-template-columns: minmax(0, 1fr); }
   }
-  /* 响应式：768–1280 自动折叠为浮层 */
-  @media (max-width: 1279px) {
-    .app { grid-template-columns: 52px minmax(0, 1fr); }
-    .l2 { position: fixed; left: 52px; top: 0; bottom: 0; width: 260px; z-index: 55;
-      transform: translateX(calc(-100% - 52px)); transition: transform .18s ease; }
-    .l2.overlay-open { transform: none; }
-    .l2-resizer { display: none; }
+  /* ============================================================
+     极简层：低对比、少盒子、多留白（参照 Linear 的阅读舒适度）
+     ============================================================ */
+  .bg-ambient { opacity: .3; }
+  .card, details.card { background: transparent; border-color: #1b1d21; box-shadow: none; }
+  .card { padding: 16px; }
+  details.card > summary { background: transparent; }
+  details.card > summary:hover { background: rgba(255, 255, 255, .02); }
+  .stat, .agent-stat { background: transparent; border-color: #1b1d21; }
+  .stats { gap: 0; border-bottom: 1px solid #1b1d21; margin-bottom: 18px; }
+  .stats .stat { border: 0; border-left: 1px solid #1b1d21; border-radius: 0; padding: 2px 0 14px 16px; }
+  .stats .stat:first-child { border-left: 0; padding-left: 0; }
+  .stats .stat .v { font-size: 22px; }
+  th { background: transparent; }
+  th, td { border-bottom-color: #1b1d21; }
+  tbody tr:hover { background: rgba(255, 255, 255, .025); }
+  .toolbar { background: #0b0c0e; border-bottom-color: #1b1d21; }
+  .l3-body { padding: 0 26px 30px; }
+  .l3-body .panel.active { padding-top: 12px; }
+  .agent-hero, .task-head { border-bottom-color: #1b1d21; }
+  .agent-hero h2, .task-head h2 { font-size: 18px; }
+  .agent-tab.active { border-bottom-color: #4ec9a5; }
+  .agent-stats { gap: 0; border-bottom: 1px solid #1b1d21; }
+  .agent-stat { border: 0; border-left: 1px solid #1b1d21; border-radius: 0; padding: 2px 0 14px 16px; }
+  .agent-stat:first-child { border-left: 0; padding-left: 0; }
+  .agent-stat .v { font-size: 19px; }
+  .task-row { border: 0; border-bottom: 1px solid #1b1d21; border-radius: 0; background: transparent; }
+  .task-row:hover { background: rgba(255, 255, 255, .025); border-color: #1b1d21; }
+  .account-grid .card { border: 0; border-top: 1px solid #1b1d21; border-radius: 0; padding: 14px 0 0; }
+  .side-scroll { padding: 6px 6px 12px; }
+  .side-block { min-height: 28px; padding: 0 7px; font-size: 12.5px; }
+  .side-sub-row { padding: 4px 7px; font-size: 12px; }
+  .side-group { margin-top: 15px; }
+  .side-group-head { padding: 0; }
+  .side-group-toggle { min-height: 28px; padding: 0 7px; font-size: 12.5px; }
+  .side-item { padding: 5px 7px; font-size: 12.5px; }
+  .side-item .meta { color: #5f656d; font-size: 10px; }
+  .side-foot { padding: 6px; }
+  .side-user { padding: 5px 7px; }
+  @media (min-width: 1024px) {
+    #user-label, #logout { display: none !important; }
+  }
+  /* 响应式：窄屏侧边栏变为浮层 */
+  @media (max-width: 1023px) {
+    .app { display: block; }
+    .side { position: fixed; top: 0; left: 0; bottom: auto; height: 100vh;
+      width: 276px; z-index: 55; transform: translateX(-100%); transition: transform .18s ease; }
+    .side.overlay-open { transform: none; }
+    .side-resizer { display: none; }
     .l3-body { padding: 0 14px 20px; }
     .apd-grid { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (min-width: 1024px) {
+    .side.collapsed { display: none; }
   }
   @media (max-width: 1023px) {
     .tb-right { gap: 6px; }
@@ -932,41 +1070,41 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 <body>
 <div class="bg-ambient" aria-hidden="true"><div class="bg-halo"></div><div class="bg-scan"></div></div>
 <div class="app" id="app">
-  <aside class="l1" id="l1" aria-label="一级模块">
-    <div class="l1-logo" title="SafeOrbit 安轨">S</div>
-    <nav class="l1-nav" aria-label="模块导航">
-      <button class="l1-btn active" data-module="guide" data-tip="使用导航" aria-label="使用导航">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m15 9-1.9 4.1L9 15l1.9-4.1z"/></svg>
-      </button>
-      <button class="l1-btn" data-module="overview" data-tip="总览" aria-label="总览">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></svg>
-      </button>
-      <button class="l1-btn" data-module="runs" data-tip="运行记录" aria-label="运行记录">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 5.5h16M4 12h16M4 18.5h10"/></svg>
-      </button>
-      <button class="l1-btn" data-module="approvals" data-tip="审批队列" aria-label="审批队列">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4.5h16v15H4z"/><path d="M8 12l2.6 2.6L16 9.4"/></svg>
-        <span class="l1-badge" id="l1-approval-badge" hidden>0</span>
-      </button>
-      <button class="l1-btn" data-module="policies" data-tip="策略配置" aria-label="策略配置">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l7 2.6v5.6c0 4.2-2.9 7-7 8.8-4.1-1.8-7-4.6-7-8.8V6.1z"/></svg>
-      </button>
-      <button class="l1-btn" data-module="agents" data-tip="智能体接入" aria-label="智能体接入">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="7.5" width="12" height="9.5" rx="2"/><path d="M9 7.5V5M15 7.5V5M12 17v2.5"/></svg>
-      </button>
-    </nav>
-    <button class="l1-btn l1-settings" data-module="settings" data-tip="设置" aria-label="设置">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6L18 18M18 6l-1.4 1.4M7.4 16.6L6 18"/></svg>
-    </button>
-  </aside>
+  <aside class="side" id="side" aria-label="主导航">
+    <div class="side-brand">
+      <span class="mark" aria-hidden="true">S</span>
+      <span class="name">SafeOrbit<small>安轨</small></span>
+      <button class="icon-btn" id="side-collapse" type="button" aria-label="折叠侧边栏" title="折叠侧边栏">«</button>
+    </div>
+    <div class="side-scroll" id="side-body">
+      <div class="side-fixed" id="side-fixed">
+        <button class="side-block active" type="button" id="side-guide-toggle" data-module="guide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m15 9-1.9 4.1L9 15l1.9-4.1z"/></svg>
+          <span>使用导航</span>
+        </button>
 
-  <aside class="l2" id="l2" aria-label="二级导航">
-    <div class="l2-head"><span id="l2-title">总览</span>
-      <button type="button" id="l2-collapse" aria-label="折叠导航">«</button></div>
-    <div class="l2-body" id="l2-body"></div>
-    <div class="l2-resizer" id="l2-resizer" title="拖动调整导航宽度"></div>
+        <button class="side-block" type="button" id="side-agents-toggle" data-module="agents">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="7.5" width="12" height="9.5" rx="2"/><path d="M9 7.5V5M15 7.5V5M12 17v2.5"/></svg>
+          <span>Agent 管理</span>
+        </button>
+
+        <button class="side-block" type="button" id="side-models-toggle" data-module="models">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 3.4v3M12 17.6v3M3.4 12h3M17.6 12h3M6 6l2.1 2.1M15.9 15.9 18 18M18 6l-2.1 2.1M8.1 15.9 6 18"/></svg>
+          <span>系统设置</span>
+        </button>
+      </div>
+      <div id="side-groups"></div>
+    </div>
+    <div class="side-foot">
+      <button class="side-user" type="button" id="side-user" data-module="account" aria-label="设置、切换身份与登出">
+        <span class="avatar" id="side-avatar" aria-hidden="true">S</span>
+        <span class="who"><b id="side-user-name">未登录</b><span id="side-user-role">设置 · 身份</span></span>
+        <span class="gear" aria-hidden="true">⚙</span>
+      </button>
+    </div>
+    <div class="side-resizer" id="side-resizer" title="拖动调整侧边栏宽度"></div>
   </aside>
-  <div class="l2-scrim" id="l2-scrim" hidden></div>
+  <div class="side-scrim" id="side-scrim" hidden></div>
 
   <main class="l3">
     <div class="toolbar">
@@ -1025,7 +1163,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         <article class="guide-card" id="guide-step-agents">
           <div class="guide-card-top"><span class="guide-num">01</span><span class="guide-state" id="guide-state-agents">待完成</span></div>
           <h4>注册智能体并签发 Key</h4>
-          <p>在「智能体接入」里注册 Agent，签发一次性 Key；Key 只展示一次，请放进环境变量。</p>
+          <p>在「Agent 管理」里注册 Agent，签发一次性 Key；Key 只展示一次，请放进环境变量。</p>
           <div class="guide-card-actions"><button class="small" type="button" data-guide-go="agents">去接入</button></div>
         </article>
         <article class="guide-card" id="guide-step-demo">
@@ -1122,6 +1260,90 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         <div id="alerts"><div class="empty">暂无提醒。发现中风险以上问题时，这里会实时亮起。</div></div>
       </div>
     </details>
+  </div>
+
+  <!-- Agent 工作台：每个现有 Agent 的任务入口 -->
+  <div class="panel" id="panel-agent">
+    <section class="agent-hero">
+      <div>
+        <div class="eyebrow">AGENT / 工作台</div>
+        <h2 id="agent-page-title">智能体</h2>
+        <div class="agent-hero-meta" id="agent-page-meta">从左侧「现有 Agent」选择一个智能体。</div>
+      </div>
+      <div class="agent-hero-actions" id="agent-page-actions"></div>
+    </section>
+    <div class="agent-tabs" role="tablist" aria-label="Agent 任务类型">
+      <button class="agent-tab active" type="button" role="tab" id="agent-tab-total" data-agent-tab="total">任务总计</button>
+      <button class="agent-tab" type="button" role="tab" id="agent-tab-records" data-agent-tab="records">检查记录</button>
+    </div>
+    <div class="agent-body" id="agent-page-body"></div>
+  </div>
+
+  <!-- 任务详情：侧边栏任务组里的每个子模块 -->
+  <div class="panel" id="panel-task">
+    <section class="task-head">
+      <div>
+        <div class="eyebrow" id="task-kind">TASK / 任务</div>
+        <h2 id="task-title">任务详情</h2>
+        <div class="muted" id="task-meta"></div>
+      </div>
+      <div class="actions" style="margin:0">
+        <button class="small" type="button" id="task-back">返回 Agent</button>
+        <button class="small" type="button" id="task-open-agent">打开 Agent 工作台</button>
+      </div>
+    </section>
+    <div class="task-body" id="task-body"></div>
+  </div>
+
+  <!-- 设置：身份切换、注册与登出 -->
+  <div class="panel" id="panel-account">
+    <section class="task-head">
+      <div>
+        <div class="eyebrow">SETTINGS / 设置</div>
+        <h2>身份与账号</h2>
+        <p class="muted" style="margin:4px 0 0">切换身份会用目标账号重新登录本机；新账号由管理员创建，创建后立即生效。</p>
+      </div>
+    </section>
+    <div class="account-grid">
+      <div class="card">
+        <h2>当前身份</h2>
+        <div class="kv" id="account-current"></div>
+        <div class="actions"><button id="account-logout" class="small">退出登录</button></div>
+      </div>
+      <div class="card">
+        <h2>切换身份</h2>
+        <div class="hint" style="margin-top:0">管理员可全权操作；普通用户只读。切换需输入目标账号密码。</div>
+        <div class="form">
+          <label class="field">已有账号<select id="account-switch-user"><option value="">手动输入</option></select></label>
+          <label class="field">用户名<input id="account-switch-name" placeholder="例如 auditor" autocomplete="username"></label>
+          <label class="field">密码<input id="account-switch-pass" type="password" autocomplete="current-password"></label>
+        </div>
+        <div class="actions">
+          <button id="account-switch" class="primary">切换并重新登录</button>
+          <span class="muted" id="account-switch-msg" role="status"></span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>新注册账号</h2>
+        <div class="hint" id="account-register-hint" style="margin-top:0">仅管理员可创建账号。</div>
+        <div class="form">
+          <label class="field">用户名<input id="account-new-name" placeholder="至少 3 位" autocomplete="off"></label>
+          <label class="field">显示名称<input id="account-new-display" placeholder="可选" autocomplete="off"></label>
+          <label class="field">初始密码<input id="account-new-pass" type="password" autocomplete="new-password"></label>
+          <label class="field">角色
+            <select id="account-new-role">
+              <option value="viewer">普通用户（只读）</option>
+              <option value="auditor">审计员（可审批）</option>
+              <option value="admin">管理员（全权）</option>
+            </select>
+          </label>
+        </div>
+        <div class="actions">
+          <button id="account-register" class="primary">创建账号</button>
+          <span class="muted" id="account-register-msg" role="status"></span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- 运行记录 -->
@@ -1221,6 +1443,14 @@ DASHBOARD_HTML = """<!DOCTYPE html>
       </div>
     </details>
     </div>
+  </div>
+
+  <!-- 审计视图 -->
+  <div class="panel" id="panel-audit">
+    <div class="page-heading"><div class="eyebrow">AUDIT VIEW / 03</div><h1>审计视图</h1><p>从「运行记录 → 最近记录」或「现有 Agent → 最近运行」点开任意一条记录，查看该次运行的时间线、资源触碰、权限、决策来源与持久变更。</p></div>
+    <div class="card" id="audit-empty" style="margin-bottom:22px">
+      <div class="hint" style="margin:0">还没有选择记录。去「运行记录 → 最近记录」或左侧「现有 Agent → 最近运行」点击任意一条记录，这里会加载对应审计视图。</div>
+    </div>
     <div class="card replay" id="replay">
       <div class="replay-head">
         <h2>审计视图 · <code id="replay-trace"></code></h2>
@@ -1232,6 +1462,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         </div>
       </div>
       <div class="view-note" id="replay-summary">选择一条记录后加载审计视图。</div>
+      <div id="crew-panel" hidden></div>
       <div class="view-tabs" id="replay-tabs">
         <button class="view-tab active" data-view="timeline">任务时间线</button>
         <button class="view-tab" data-view="resources">资源触碰</button>
@@ -1265,6 +1496,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         </table></div>
       </div>
     </div>
+    <div class="hint">数据与证据导出已移至「系统设置 → 数据管理」，证据包包含轨迹、报告、哈希链、策略与操作日志。</div>
   </div>
 
   <!-- 策略中心 -->
@@ -1333,6 +1565,27 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         <div class="table-scroll" tabindex="0" role="region" aria-label="策略列表表格"><table>
           <thead><tr><th>智能体</th><th>名称</th><th>模式</th><th>预算</th><th>白名单</th><th>金额阈值</th><th>规则</th><th>操作</th></tr></thead>
           <tbody id="policies"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+        </table></div>
+      </div>
+    </details>
+    <details class="card wide" id="system-status-card" hidden>
+      <summary><span><span class="summary-title">运行状态 · 管理员</span><span class="summary-meta">依赖健康、全局模式与累计计数</span></span></summary>
+      <div class="card-body">
+        <div class="hint">就绪检查会验证数据库可用性；出站依赖（裁判、通知）连续失败会触发熔断，熔断期间自动跳过而不是拖垮审计主链路。</div>
+        <div class="mode-row">
+          <label class="field">全局运行模式
+            <select id="global-mode">
+              <option value="shadow">影子模式（只记录，不阻断）</option>
+              <option value="enforce">拦截模式（允许阻断）</option>
+            </select>
+          </label>
+          <button id="global-mode-save" class="primary">应用到全局</button>
+          <span class="mode-note" id="global-mode-msg" role="status"></span>
+        </div>
+        <div class="actions"><button id="system-status-refresh" class="primary">刷新运行状态</button><span class="muted" id="system-status-msg" role="status"></span></div>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="运行状态表格"><table>
+          <thead><tr><th>名称</th><th>状态</th><th>说明</th></tr></thead>
+          <tbody id="system-status"><tr><td colspan="3" class="empty">点击刷新加载</td></tr></tbody>
         </table></div>
       </div>
     </details>
@@ -1506,76 +1759,178 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             </table></div>
           </div>
         </details>
-        <details class="fold">
-          <summary>红队检测</summary>
-          <div class="fold-body">
-            <div class="actions">
-              <button class="primary" id="redteam-run">运行内置红队集</button>
-              <span class="muted" id="redteam-msg"></span>
-            </div>
-            <div class="table-scroll" tabindex="0" role="region" aria-label="红队检测结果表格"><table>
-              <thead><tr><th>结果</th><th>提示</th><th>命中规则</th></tr></thead>
-              <tbody id="redteam-findings"><tr><td colspan="3" class="empty">尚未运行</td></tr></tbody>
-            </table></div>
-          </div>
-        </details>
       </div>
     </details>
   </div>
 
-  <div class="panel" id="panel-settings">
-    <details class="card" id="model-catalog-card">
-      <summary><span><span class="summary-title">模型连接（只读）</span><span class="summary-meta">查看可用模型与裁判状态</span></span></summary>
-      <div class="card-body">
-        <div class="hint">目录为只读视图；管理员可在下方管理本机模型连接，显式 YAML 配置仍需修改文件后重启。“密钥已配置”不代表真实联通。模型选择仅用于接入示例，不改变独立裁判。</div>
-        <div id="model-mode" class="hint" role="status">模型目录尚未加载</div>
-        <div id="model-judge" class="hint" role="status">当前裁判状态尚未加载</div>
-        <div class="table-scroll" tabindex="0" role="region" aria-label="模型目录表格"><table><thead><tr><th>模型别名</th><th>供应商</th><th>实际模型</th><th>用途</th><th>密钥状态</th><th>能力</th></tr></thead><tbody id="model-catalog"><tr><td colspan="6" class="empty">打开设置后加载</td></tr></tbody></table></div>
+  <!-- 红队检测 -->
+  <div class="panel" id="panel-redteam">
+    <div class="page-heading"><div class="eyebrow">RED TEAM / 05</div><h1>红队检测</h1><p>用内置攻击提示集验证内容护栏，覆盖提示注入、越权索取、密钥外发与 PII 批量导出。</p></div>
+    <div class="card">
+      <h2>内置红队集</h2>
+      <div class="hint" style="margin-top:0">检测针对内容护栏规则，不调用真实模型；每条提示都会给出命中规则与证据片段，未命中也会记录，方便补规则。</div>
+      <div class="actions">
+        <button class="primary" id="redteam-run">运行内置红队集</button>
+        <span class="muted" id="redteam-msg" role="status"></span>
       </div>
-    </details>
-    <details class="card wide" id="model-settings" hidden>
-      <summary><span><span class="summary-title">模型设置 · 管理员</span><span class="summary-meta">连接、密钥与独立裁判</span></span></summary>
-      <div class="card-body">
-        <div id="ms-source" class="hint"></div>
-        <div class="hint">密钥仅提交到本机服务，不回填、不写浏览器存储。已有连接空输入保留密钥；修改 origin 必须重新填写或明确清除。仅支持公网 HTTPS 443；远程管理请使用 HTTPS。保存只作本地校验，不代表真实联通。</div>
-        <div class="form">
-          <label class="field">默认网关<select id="ms-default"></select></label>
-          <label class="field">独立裁判连接<select id="ms-judge"></select></label>
-          <label class="field"><span>独立裁判开关</span><input id="ms-enabled" type="checkbox"></label>
-        </div>
-        <div class="actions"><button id="ms-add">新增连接</button><button id="ms-save" class="primary">保存并生效</button><button id="ms-reload">重新加载（丢弃修改）</button></div>
-        <div id="ms-dirty" class="hint" role="status"></div>
-        <div id="ms-msg" class="hint" role="status"></div>
-        <details class="fold" id="judge-prompt-fold">
-          <summary>独立裁判提示词（只读）</summary>
-          <div class="fold-body">
-            <div class="hint" id="judge-prompt-meta" style="margin-top:0">加载中…</div>
-            <pre id="judge-prompt-text" style="max-height:320px">加载中…</pre>
-            <div class="hint" id="judge-prompt-guards"></div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="红队检测结果表格"><table>
+        <thead><tr><th>结果</th><th>提示</th><th>命中规则</th></tr></thead>
+        <tbody id="redteam-findings"><tr><td colspan="3" class="empty">尚未运行</td></tr></tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-settings">
+    <div class="page-heading"><div class="eyebrow">SYSTEM / 04</div><h1>系统设置</h1><p>模型连接、检索与裁决参数、裁判提示词，以及本地数据管理。改动保存后对下一次审计生效。</p></div>
+    <div class="sys-switch" role="tablist" aria-label="系统设置分区">
+      <button class="sys-switch-btn active" type="button" data-sys="config" role="tab">系统配置</button>
+      <button class="sys-switch-btn" type="button" data-sys="data" role="tab">数据管理</button>
+    </div>
+
+    <div class="sys-pane" id="sys-pane-config">
+      <div class="sys-subtabs" role="tablist" aria-label="系统配置分类">
+        <button class="sys-subtab active" type="button" data-sys-sub="models" role="tab">模型连接</button>
+        <button class="sys-subtab" type="button" data-sys-sub="retrieval" role="tab">检索配置</button>
+        <button class="sys-subtab" type="button" data-sys-sub="params" role="tab">分析参数</button>
+        <button class="sys-subtab" type="button" data-sys-sub="prompt" role="tab">裁判提示词</button>
+      </div>
+
+      <div class="sys-subpane active" id="sys-sub-models">
+        <div class="hint" id="model-readonly-hint" hidden style="margin-top:0">仅管理员可修改模型连接；当前生效裁判可在审计报告中查看。</div>
+        <details class="card wide" id="model-settings" hidden>
+          <summary><span><span class="summary-title">模型连接 · 管理员</span><span class="summary-meta">连接、密钥与独立裁判</span></span></summary>
+          <div class="card-body">
+            <div id="ms-source" class="hint" style="margin-top:0"></div>
+            <fieldset id="ms-editor" hidden>
+              <legend>连接配置</legend>
+              <div class="form">
+                <label class="field full">模型提供商
+                  <select id="ms-provider"><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option><option value="dashscope">DashScope</option><option value="custom">自定义兼容服务</option></select>
+                </label>
+                <label class="field full">API 密钥（留空保留）
+                  <input id="ms-key" type="password" autocomplete="new-password" spellcheck="false" placeholder="输入 API Key">
+                  <span class="muted">加密保存在本机，不回显。</span>
+                </label>
+                <label class="field">模型名称
+                  <input id="ms-model" placeholder="例如 deepseek-chat">
+                </label>
+                <label class="field">API 基础 URL
+                  <input id="ms-url" type="url" placeholder="https://api.deepseek.com">
+                  <span class="muted">仅支持公网 HTTPS 443。</span>
+                </label>
+              </div>
+              <details class="fold" id="ms-advanced">
+                <summary>高级选项</summary>
+                <div class="fold-body">
+                  <div class="form">
+                    <label class="field">稳定英文别名<input id="ms-id" autocomplete="off" placeholder="例如 primary-model"></label>
+                    <label class="field">显示名<input id="ms-name"></label>
+                  </div>
+                  <div class="checks">
+                    <label><input id="ms-gateway" type="checkbox">网关用途</label>
+                    <label><input id="ms-purpose-judge" type="checkbox">裁判用途</label>
+                    <label><input id="ms-stream" type="checkbox">支持流式</label>
+                    <label><input id="ms-json" type="checkbox">支持 JSON 对象</label>
+                    <label><input id="ms-clear" type="checkbox">清除已有 Key</label>
+                  </div>
+                </div>
+              </details>
+              <div class="actions">
+                <button id="ms-test">测试连接</button>
+                <button id="ms-save" class="primary">保存并生效</button>
+                <button id="ms-add">新增连接</button>
+                <button id="ms-reload">重新加载</button>
+                <button id="ms-close">取消</button>
+              </div>
+              <div id="ms-msg" class="hint" role="status"></div>
+              <div id="ms-dirty" class="hint" role="status"></div>
+            </fieldset>
+            <div class="table-scroll" tabindex="0" role="region" aria-label="模型连接表格"><table><thead><tr><th>别名 / 显示名</th><th>模型 / 供应商</th><th>Key 状态</th><th>操作</th></tr></thead><tbody id="ms-list"></tbody></table></div>
+            <details class="fold" id="ms-global">
+              <summary>默认用途</summary>
+              <div class="fold-body">
+                <div class="form">
+                  <label class="field">默认网关<select id="ms-default"></select></label>
+                  <label class="field">独立裁判连接<select id="ms-judge"></select></label>
+                  <label class="field">独立裁判开关<input id="ms-enabled" type="checkbox"></label>
+                </div>
+              </div>
+            </details>
           </div>
         </details>
-        <div class="table-scroll" tabindex="0" role="region" aria-label="模型连接表格"><table><thead><tr><th>别名 / 显示名</th><th>模型 / 供应商</th><th>Key 状态</th><th>操作</th></tr></thead><tbody id="ms-list"></tbody></table></div>
-        <fieldset id="ms-editor" hidden>
-          <legend>连接编辑（已保存别名不可修改）</legend>
-          <div class="form">
-            <label class="field">稳定英文别名<input id="ms-id" autocomplete="off" placeholder="例如 primary-model"></label>
-            <label class="field">显示名<input id="ms-name"></label>
-            <label class="field">供应商<select id="ms-provider"><option value="openai">OpenAI</option><option value="deepseek">DeepSeek</option><option value="dashscope">DashScope</option><option value="custom">自定义兼容服务</option></select></label>
-            <label class="field">Base URL<input id="ms-url" type="url" placeholder="https://api.example.com/v1"></label>
-            <label class="field">上游模型名<input id="ms-model"></label>
-            <label class="field">API Key（留空保留）<input id="ms-key" type="password" autocomplete="new-password" spellcheck="false"></label>
-          </div>
-          <div class="checks">
-            <label><input id="ms-gateway" type="checkbox">网关用途</label>
-            <label><input id="ms-purpose-judge" type="checkbox">裁判用途</label>
-            <label><input id="ms-stream" type="checkbox">支持流式</label>
-            <label><input id="ms-json" type="checkbox">支持 JSON 对象</label>
-            <label><input id="ms-clear" type="checkbox">明确清除已有 Key</label>
-          </div>
-          <div class="actions"><button id="ms-close">关闭表单（清空待提交 Key）</button></div>
-        </fieldset>
       </div>
-    </details>
+
+      <div class="sys-subpane" id="sys-sub-retrieval">
+        <div class="card">
+          <h2>审计知识库</h2>
+          <div class="hint">关键词检索（SQLite FTS5 + BM25），不依赖向量模型。文档按二级标题切节，再按 520 字切片、重叠 80 字；裁判只引用命中片段，引用编号由后端映射。</div>
+          <div class="params-grid">
+            <div class="param-item"><div class="k">文档</div><div class="v" id="kb-documents">—</div></div>
+            <div class="param-item"><div class="k">切片</div><div class="v" id="kb-chunks">—</div></div>
+            <div class="param-item"><div class="k">分词器</div><div class="v" id="kb-tokenizer">—</div></div>
+            <div class="param-item"><div class="k">召回条数</div><div class="v" id="kb-limit">—</div></div>
+          </div>
+          <div class="actions"><button id="kb-refresh" class="primary">刷新</button><button id="kb-rebuild">重建索引</button><span class="muted" id="kb-msg" role="status"></span></div>
+        </div>
+      </div>
+
+      <div class="sys-subpane" id="sys-sub-params">
+        <details class="card" id="audit-params-card">
+          <summary><span><span class="summary-title">分析参数 · 管理员</span><span class="summary-meta">超时、重试、输出与输入上限</span></span></summary>
+          <div class="card-body">
+            <div class="hint">保存后对下一次审计生效；温度固定为 0，同一轨迹必须得到同一结论。推理模型需要更大的输出额度，否则会被 reasoning 占满而返回空内容。</div>
+            <div class="form">
+              <label class="field">单次模型请求超时（秒）<input id="ap-timeout" type="number" min="5" max="180" step="1"></label>
+              <label class="field">失败重试次数（0–5）<input id="ap-retries" type="number" min="0" max="5" step="1"></label>
+              <label class="field">单次输出上限（token）<input id="ap-tokens" type="number" min="400" max="8000" step="100"></label>
+              <label class="field">轨迹输入上限（字符）<input id="ap-chars" type="number" min="2000" max="60000" step="1000"></label>
+              <label class="field">知识库召回条数（1–8）<input id="ap-kb" type="number" min="1" max="8" step="1"></label>
+              <label class="field">温度（固定 0）<input value="0" disabled></label>
+            </div>
+            <div class="actions"><button id="ap-save" class="primary">保存并生效</button><button id="ap-reload">重新加载</button><span class="muted" id="ap-msg" role="status"></span></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="sys-subpane" id="sys-sub-prompt">
+        <div class="card" id="judge-prompt-fold">
+          <h2>裁判提示词（只读）</h2>
+          <div class="hint" id="judge-prompt-meta" style="margin-top:0">加载中…</div>
+          <pre id="judge-prompt-text" style="max-height:420px">加载中…</pre>
+          <div class="hint" id="judge-prompt-guards"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sys-pane" id="sys-pane-data" hidden>
+      <div class="card">
+        <h2>数据库健康与统计</h2>
+        <div class="hint">统计来自当前 SQLite 实例；轨迹是原始证据，清理前请先导出证据包。</div>
+        <div class="params-grid">
+          <div class="param-item"><div class="k">状态</div><div class="v" id="dm-db">—</div></div>
+          <div class="param-item"><div class="k">数据库体积</div><div class="v" id="dm-size">—</div></div>
+          <div class="param-item"><div class="k">轨迹</div><div class="v" id="dm-traces">—</div></div>
+          <div class="param-item"><div class="k">智能体</div><div class="v" id="dm-agents">—</div></div>
+          <div class="param-item"><div class="k">待处理审批</div><div class="v" id="dm-approvals">—</div></div>
+          <div class="param-item"><div class="k">策略</div><div class="v" id="dm-policies">—</div></div>
+          <div class="param-item"><div class="k">审计事件</div><div class="v" id="dm-events">—</div></div>
+        </div>
+        <div class="actions"><button id="dm-refresh" class="primary">刷新统计</button><span class="muted" id="dm-msg" role="status"></span></div>
+      </div>
+      <details class="card wide" id="data-governance-card">
+        <summary><span><span class="summary-title">数据与证据</span><span class="summary-meta">保留策略、清理与证据包</span></span></summary>
+        <div class="card-body">
+          <div class="hint">按保留策略预览或清理历史数据；导出包含轨迹、报告、哈希链、策略和操作日志的 zip 证据包。</div>
+          <div class="actions">
+            <button id="retention-preview">查看保留预演</button>
+            <button id="evidence-export" class="primary">导出证据包</button>
+            <span class="muted" id="data-msg"></span>
+          </div>
+          <div id="retention-result" class="hint"></div>
+          <a id="evidence-link" hidden target="_blank">下载证据包 →</a>
+        </div>
+      </details>
+    </div>
   </div>
 
   <div class="panel" id="panel-agents">
@@ -1609,30 +1964,6 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         <div class="table-scroll" tabindex="0" role="region" aria-label="版本对比表格"><table>
           <thead><tr><th>版本</th><th>记录</th><th>风险记录</th><th>风险率</th><th>成本</th><th>平均命中</th><th>最近</th></tr></thead>
           <tbody id="agent-versions"><tr><td colspan="7" class="empty">输入智能体 ID 后加载</td></tr></tbody>
-        </table></div>
-      </div>
-    </details>
-    <details class="card wide" id="data-governance-card">
-      <summary><span><span class="summary-title">数据与证据</span><span class="summary-meta">保留策略、清理与证据包</span></span></summary>
-      <div class="card-body">
-        <div class="hint">按保留策略预览或清理历史数据；导出包含轨迹、报告、哈希链、策略和操作日志的 zip 证据包。</div>
-        <div class="actions">
-          <button id="retention-preview">查看保留预演</button>
-          <button id="evidence-export" class="primary">导出证据包</button>
-          <span class="muted" id="data-msg"></span>
-        </div>
-        <div id="retention-result" class="hint"></div>
-        <a id="evidence-link" hidden target="_blank">下载证据包 →</a>
-      </div>
-    </details>
-    <details class="card wide" id="system-status-card" hidden>
-      <summary><span><span class="summary-title">运行状态 · 管理员</span><span class="summary-meta">依赖健康、熔断与累计计数</span></span></summary>
-      <div class="card-body">
-        <div class="hint">就绪检查会验证数据库可用性；出站依赖（裁判、通知）连续失败会触发熔断，熔断期间自动跳过而不是拖垮审计主链路。</div>
-        <div class="actions"><button id="system-status-refresh" class="primary">刷新运行状态</button><span class="muted" id="system-status-msg" role="status"></span></div>
-        <div class="table-scroll" tabindex="0" role="region" aria-label="运行状态表格"><table>
-          <thead><tr><th>名称</th><th>状态</th><th>说明</th></tr></thead>
-          <tbody id="system-status"><tr><td colspan="3" class="empty">点击刷新加载</td></tr></tbody>
         </table></div>
       </div>
     </details>
@@ -1996,16 +2327,15 @@ const starfield = (() => {
   }
   return {
     start() {
-      if (frame || !ensureContext()) return;
-      if (reduceMotion.matches) { draw(false); return; }
-      loop();
+      if (!ensureContext()) return;
+      // 静态单次绘制：不跑逐帧动画，避免全屏 canvas 持续重绘导致黑屏
+      draw(false);
     },
     stop() {
       if (frame) window.cancelAnimationFrame(frame);
       frame = null;
     },
     resize() { resize(); draw(false); },
-    move(x, y) { pointer.x = x; pointer.y = y; },
   };
 })();
 
@@ -2071,18 +2401,6 @@ function stopLandingMotion() {
 }
 
 const landingEl = document.getElementById("landing");
-let spotlightQueued = false;
-landingEl.addEventListener("pointermove", event => {
-  starfield.move(event.clientX, event.clientY);
-  if (spotlightQueued) return;
-  spotlightQueued = true;
-  const x = event.clientX, y = event.clientY;
-  window.requestAnimationFrame(() => {
-    spotlightQueued = false;
-    landingEl.style.setProperty("--mx", x + "px");
-    landingEl.style.setProperty("--my", y + "px");
-  });
-});
 window.addEventListener("resize", () => { try { starfield.resize(); } catch (error) {} });
 
 async function api(path, options) {
@@ -2117,6 +2435,11 @@ async function loadMe() {
     currentUser = data.user;
     document.getElementById("user-label").textContent =
       (currentUser.display_name || currentUser.username) + " · " + currentUser.role;
+    document.getElementById("side-user-name").textContent =
+      currentUser.display_name || currentUser.username;
+    document.getElementById("side-user-role").textContent = ROLE_NAMES[currentUser.role] || currentUser.role;
+    document.getElementById("side-avatar").textContent =
+      String(currentUser.display_name || currentUser.username || "S").slice(0, 1).toUpperCase();
     document.getElementById("logout").style.display = data.auth_enabled ? "inline-block" : "none";
     hideLanding();
     hideLogin();
@@ -2181,16 +2504,26 @@ document.getElementById("login-pass").addEventListener("keydown", event => {
 document.getElementById("logout").addEventListener("click", doLogout);
 
 // ------------------------- 标签页 -------------------------
+let sysSection = "config";
+let sysConfigTab = "models";
 const PANEL_TO_MODULE = {
-  guide: "guide", overview: "overview", traces: "runs", dispositions: "approvals",
-  policies: "policies", agents: "agents", settings: "settings", codeaudit: "settings",
+  guide: "guide", overview: "overview", traces: "runs", audit: "audit",
+  dispositions: "approvals",
+  policies: "policies", agents: "agents", settings: "models",
+  codeaudit: "codeaudit", redteam: "redteam",
+  agent: "agent", task: "task", account: "account",
 };
 
 function switchTab(name) {
   if (name !== 'settings' && modelSettings) closeModelForm();
   clearAgentSecret();
   document.querySelectorAll(".panel").forEach(panel => panel.classList.toggle("active", panel.id === "panel-" + name));
-  if (name === "policies") loadPolicies();
+  if (name === "policies") {
+    loadPolicies();
+    const statusCard = document.getElementById("system-status-card");
+    if (statusCard) statusCard.hidden = !can("admin");
+  }
+  if (name === "audit") applyAuditVisibility();
   if (name === "dispositions") loadDispositions();
   if (name === "codeaudit") loadCodeAudit();
   if (name === "agents") {
@@ -2198,7 +2531,13 @@ function switchTab(name) {
     const manageCard = document.getElementById("agent-management-card");
     if (manageCard) manageCard.open = true;
   }
-  if (name === "settings") { loadModels(); loadModelSettings(); }
+  if (name === "settings") {
+    loadModels();
+    loadModelSettings();
+    loadAuditParams();
+    loadKbStatus();
+    if (sysSection === "data") loadDataStats();
+  }
   if (name === "guide") renderGuide();
   if (typeof afterPanelSwitch === "function") afterPanelSwitch(name);
   const body = document.getElementById("l3-body");
@@ -2445,6 +2784,8 @@ const ACTION_TEXT = {read: "读取", write: "写入", exec: "执行"};
 let auditViewData = null;
 
 async function openReplay(traceId) {
+  showRunDetail(traceId);
+  document.getElementById("replay-summary").textContent = "正在加载审计视图…";
   try {
     const data = await api("/api/traces/" + encodeURIComponent(traceId) + "/audit-views");
     auditViewData = data;
@@ -2454,10 +2795,38 @@ async function openReplay(traceId) {
     document.getElementById("integrity-result").textContent = "";
     renderReplay();
     renderAuditViews();
+    renderCrew(traceId);
     switchReplayView("timeline");
-    document.getElementById("replay").style.display = "block";
-    if (typeof showRunDetail === "function") showRunDetail(traceId);
     play();
+  } catch (error) {}
+}
+
+async function renderCrew(traceId) {
+  const box = document.getElementById("crew-panel");
+  if (!box) return;
+  box.hidden = true;
+  box.innerHTML = "";
+  try {
+    const data = await api("/api/traces/" + encodeURIComponent(traceId) + "/crew");
+    const agents = (data && data.agents) || [];
+    if (!agents.length) return;
+    const stateText = {ok: "已执行", skipped: "已跳过", error: "执行异常"};
+    const cards = agents.map(agent => {
+      const cites = (agent.citations || []).map(item =>
+        '<span class="crew-cite">' + esc(item.title) +
+        (item.section ? " / " + esc(item.section) : "") + "</span>"
+      ).join("");
+      return '<div class="crew-card">' +
+        '<div class="crew-name"><span>' + esc(agent.name) + "</span>" +
+        '<span class="crew-state">' + esc(stateText[agent.status] || agent.status) + "</span></div>" +
+        '<div class="crew-meta">提出 ' + Number(agent.findings || 0) + " 条建议复核</div>" +
+        (cites ? '<div class="crew-cites">依据：' + cites + "</div>" : "") +
+        "</div>";
+    }).join("");
+    box.innerHTML = '<div class="crew-title">审计小队 · ' + agents.length +
+      " 个 Agent 分工取证，结论统一交由裁决器</div>" +
+      '<div class="crew-grid">' + cards + "</div>";
+    box.hidden = false;
   } catch (error) {}
 }
 
@@ -3593,7 +3962,7 @@ function resetModelSettings() {
 }
 function markModelDirty() {
   modelDirty = true;
-  ms('dirty').textContent = '有未保存修改；测试已禁用，请先保存。关闭或切换表单会清空待提交 Key。';
+  ms('dirty').textContent = '有未保存修改';
   modelMessage('');
   renderModelList();
 }
@@ -3616,15 +3985,16 @@ function renderModelList() {
   const ro = modelSettings.read_only || modelBusy;
   ms('list').innerHTML = modelDraft.map((p, i) =>
     '<tr><td>' + esc(p.id || '新连接') + ' / ' + esc(p.display_name) + '</td><td>' +
-    esc(p.model) + ' / ' + esc(p.provider) + '</td><td>' + esc(p.key_action === 'clear' ? '待清除' : (p.key_configured ? '已配置（未验证）' : '未配置，不可调用')) +
-    '</td><td><button data-ms-edit="' + i + '"' + (modelBusy ? ' disabled' : '') + '>查看 / 编辑</button> ' +
+    esc(p.model) + ' / ' + esc(p.provider) + '</td><td>' + esc(p.key_action === 'clear' ? '待清除' : (p.key_configured ? '已配置' : '未配置')) +
+    '</td><td><button data-ms-edit="' + i + '"' + (modelBusy ? ' disabled' : '') + '>编辑</button> ' +
     '<button data-ms-delete="' + i + '"' + (ro || (modelSettings.judge_profile_locked && p.id === modelSettings.overrides.judge_profile) ? ' disabled' : '') + '>删除</button> ' +
-    '<button data-ms-test="' + i + '"' + (modelBusy || modelDirty || modelConflict ? ' disabled' : '') + '>测试已保存连接</button></td></tr>'
-  ).join('') || '<tr><td colspan="4" class="empty">暂无连接</td></tr>';
+    '<button data-ms-test="' + i + '"' + (modelBusy || modelDirty || modelConflict ? ' disabled' : '') + '>测试</button></td></tr>'
+  ).join('') || '<tr><td colspan="4" class="empty">暂无连接，点击「新增连接」</td></tr>';
   ms('save').disabled = ro || modelConflict;
   ms('add').disabled = ro || modelConflict;
   ms('reload').disabled = modelBusy;
   ms('editor').disabled = ro;
+  ms('test').disabled = ro || modelBusy || modelDirty || modelConflict || modelEditing < 0;
   ms('default').disabled = ro;
   ms('judge').disabled = ro || modelSettings.judge_profile_locked;
   ms('enabled').disabled = ro || modelSettings.judge_enabled_locked;
@@ -3662,8 +4032,10 @@ function openModelForm(index) {
   ms('editor').hidden = false;
 }
 async function loadModelSettings(force = false) {
-  document.getElementById('model-settings').hidden = !can('admin');
-  if (!can('admin') || (!force && modelSettings)) return;
+  const allowed = can('admin');
+  document.getElementById('model-settings').hidden = !allowed;
+  document.getElementById('model-readonly-hint').hidden = allowed;
+  if (!allowed || (!force && modelSettings)) return;
   const epoch = ++modelEpoch;
   try {
     const data = await api('/api/admin/models');
@@ -3675,19 +4047,25 @@ async function loadModelSettings(force = false) {
     modelDirty = false;
     modelConflict = false;
     ms('editor').hidden = true;
-    ms('source').textContent = '来源：' + data.source + ' · revision：' + data.revision + ' · ' + (data.read_only ? data.read_only_reason : '本机可编辑') +
-      (data.override_reason ? ' · ' + data.override_reason : '') +
-      '；生效裁判：' + (data.effective_judge_enabled ? '开启' : '关闭') + ' / ' + (data.effective_judge_profile || '未选择') +
-      (data.judge_profile_locked ? '；连接已锁定：' + data.overrides.judge_profile : '') + (data.judge_enabled_locked ? '；开关已锁定' : '');
+    ms('source').textContent = (data.read_only ? data.read_only_reason : '本机可编辑') +
+      ' · revision ' + data.revision +
+      (data.effective_judge_enabled ? ' · 裁判已开启' : ' · 裁判未开启') +
+      (data.judge_profile_locked ? ' · 裁判连接锁定' : '') +
+      (data.judge_enabled_locked ? ' · 裁判开关锁定' : '');
     ms('default').innerHTML = '';
     ms('judge').innerHTML = '';
     renderModelSelections();
     ms('default').value = data.default_gateway || '';
     ms('judge').value = data.judge_profile || '';
     ms('enabled').checked = data.judge_enabled;
-    ms('dirty').textContent = '已保存；Key 配置状态不代表真实测试成功。';
+    ms('dirty').textContent = '已保存';
     modelMessage('');
     renderModelList();
+    if (modelDraft.length) {
+      const preferred = data.default_gateway || data.judge_profile;
+      let index = modelDraft.findIndex(p => p.id === preferred);
+      openModelForm(index < 0 ? 0 : index);
+    }
     loadJudgePrompt();
   } catch (error) {
     if (epoch === modelEpoch) modelMessage('设置加载失败，请重新加载。');
@@ -3709,6 +4087,150 @@ async function loadJudgePrompt() {
     document.getElementById('judge-prompt-text').textContent = '加载失败：' + error.message;
   }
 }
+// ------------------------- 系统设置：参数 / 检索 / 数据 -------------------------
+let auditParamsState = null;
+
+function setSystemMessage(id, text) {
+  const node = document.getElementById(id);
+  if (node) node.textContent = text;
+}
+
+function applySysTabs() {
+  document.querySelectorAll(".sys-switch-btn").forEach(btn =>
+    btn.classList.toggle("active", btn.dataset.sys === sysSection));
+  const configPane = document.getElementById("sys-pane-config");
+  const dataPane = document.getElementById("sys-pane-data");
+  if (configPane) configPane.hidden = sysSection !== "config";
+  if (dataPane) dataPane.hidden = sysSection !== "data";
+  document.querySelectorAll(".sys-subtab").forEach(btn =>
+    btn.classList.toggle("active", btn.dataset.sysSub === sysConfigTab));
+  document.querySelectorAll(".sys-subpane").forEach(pane =>
+    pane.classList.toggle("active", pane.id === "sys-sub-" + sysConfigTab));
+  if (sysSection === "data") loadDataStats();
+}
+
+async function loadAuditParams() {
+  try {
+    const data = await api("/api/admin/audit-params");
+    auditParamsState = data;
+    const params = data.params || {};
+    const fill = (id, value) => { const el = document.getElementById(id); if (el) el.value = value; };
+    fill("ap-timeout", params.timeout_s);
+    fill("ap-retries", params.max_retries);
+    fill("ap-tokens", params.max_tokens);
+    fill("ap-chars", params.max_input_chars);
+    fill("ap-kb", params.kb_limit);
+    setSystemMessage("ap-msg", "");
+    const limit = document.getElementById("kb-limit");
+    if (limit) limit.textContent = Number(params.kb_limit || 0);
+  } catch (error) {
+    setSystemMessage("ap-msg", error.status === 403 ? "需要管理员权限" : "参数加载失败");
+  }
+}
+
+async function saveAuditParams() {
+  const button = document.getElementById("ap-save");
+  const params = {
+    timeout_s: Number(document.getElementById("ap-timeout").value),
+    max_retries: Number(document.getElementById("ap-retries").value),
+    max_tokens: Number(document.getElementById("ap-tokens").value),
+    max_input_chars: Number(document.getElementById("ap-chars").value),
+    kb_limit: Number(document.getElementById("ap-kb").value)
+  };
+  button.disabled = true;
+  setSystemMessage("ap-msg", "保存中…");
+  try {
+    const data = await api("/api/admin/audit-params", {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({params: params})
+    });
+    auditParamsState = data;
+    setSystemMessage("ap-msg", "已保存，下一次审计生效");
+    const limit = document.getElementById("kb-limit");
+    if (limit) limit.textContent = Number(data.params.kb_limit || 0);
+  } catch (error) {
+    setSystemMessage("ap-msg", error.message || "保存失败");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function loadKbStatus() {
+  try {
+    const data = await api("/api/admin/kb");
+    const put = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+    put("kb-documents", Number(data.documents || 0));
+    put("kb-chunks", Number(data.chunks || 0));
+    put("kb-tokenizer", data.tokenizer || "—");
+    const params = (auditParamsState && auditParamsState.params) || {};
+    put("kb-limit", Number(params.kb_limit || 0) || "—");
+    setSystemMessage("kb-msg", data.ready ? "" : "索引尚未就绪");
+  } catch (error) {
+    setSystemMessage("kb-msg", error.status === 403 ? "需要管理员权限" : "知识库状态加载失败");
+  }
+}
+
+async function rebuildKb() {
+  const button = document.getElementById("kb-rebuild");
+  button.disabled = true;
+  setSystemMessage("kb-msg", "重建中…");
+  try {
+    const data = await api("/api/admin/kb/rebuild", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: "{}"
+    });
+    setSystemMessage("kb-msg", "已重建 " + Number(data.rebuilt || data.chunks || 0) + " 个切片");
+    await loadKbStatus();
+  } catch (error) {
+    setSystemMessage("kb-msg", error.message || "重建失败");
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function bytesText(value) {
+  const size = Number(value) || 0;
+  if (size < 1024) return size + " B";
+  if (size < 1024 * 1024) return (size / 1024).toFixed(1) + " KB";
+  return (size / 1024 / 1024).toFixed(2) + " MB";
+}
+
+async function loadDataStats() {
+  const put = (id, value) => { const el = document.getElementById(id); if (el) el.textContent = value; };
+  setSystemMessage("dm-msg", "加载中…");
+  try {
+    const data = await api("/api/admin/data-stats");
+    put("dm-db", data.db_ok ? "正常" : "异常");
+    put("dm-size", bytesText(data.db_size_bytes));
+    put("dm-traces", Number(data.traces || 0));
+    put("dm-agents", Number(data.agents || 0));
+    put("dm-approvals", Number(data.approvals_pending || 0));
+    put("dm-policies", Number(data.policies || 0));
+    put("dm-events", Number(data.audit_events || 0));
+    setSystemMessage("dm-msg", "已刷新");
+  } catch (error) {
+    setSystemMessage("dm-msg", error.status === 403 ? "需要管理员权限" : (error.message || "统计加载失败"));
+  }
+}
+
+const systemPanel = document.getElementById("panel-settings");
+if (systemPanel) {
+  systemPanel.addEventListener("click", event => {
+    const main = event.target.closest("[data-sys]");
+    if (main) { sysSection = main.dataset.sys; applySysTabs(); return; }
+    const sub = event.target.closest("[data-sys-sub]");
+    if (sub) { sysConfigTab = sub.dataset.sysSub; applySysTabs(); }
+  });
+}
+document.getElementById("ap-save").addEventListener("click", saveAuditParams);
+document.getElementById("ap-reload").addEventListener("click", loadAuditParams);
+document.getElementById("kb-refresh").addEventListener("click", loadKbStatus);
+document.getElementById("kb-rebuild").addEventListener("click", rebuildKb);
+document.getElementById("dm-refresh").addEventListener("click", loadDataStats);
+applySysTabs();
+
 function modelOperationError(error) {
   if (error.status === 409) {
     modelConflict = true;
@@ -3751,16 +4273,15 @@ async function saveModelSettings() {
 }
 async function testModelConnection(index) {
   if (!modelSettings || modelBusy || modelDirty || modelConflict) return;
-  if (!confirm('将向已保存连接发送真实请求，可能产生少量费用；不验证全部流式 / JSON 能力。是否继续？')) return;
+  if (!confirm('将向该连接发送一次真实请求，可能产生少量费用；是否继续？')) return;
   const epoch = modelEpoch;
   modelBusy = true;
   renderModelList();
   try {
     const result = await api('/api/admin/models/test', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({id:modelDraft[index].id, expected_revision:modelSettings.revision})});
     if (epoch !== modelEpoch || !can('admin')) return;
-    const categories = {ok:'成功', missing_key:'未配置密钥', invalid_response:'响应格式不符合要求', upstream_error:'上游请求失败', response_too_large:'响应超限', timeout:'请求超时', network_error:'网络或安全出站校验失败'};
-    modelMessage('已保存连接测试：' + (result.success === true ? '真实请求成功（仅本次最小请求）' : '未通过') +
-      '；类别：' + (categories[result.category] || '未知结果') + '；耗时：' + (Number(result.elapsed_ms) || 0) + ' ms；revision：' + (Number(result.revision) || 0) + '；不展示上游响应内容。');
+    const categories = {ok:'成功', missing_key:'未配置密钥', invalid_response:'响应格式不符', upstream_error:'上游拒绝', response_too_large:'响应超限', timeout:'请求超时', network_error:'网络或出站校验失败'};
+    modelMessage('连接测试：' + (categories[result.category] || '未知') + ' · ' + (Number(result.elapsed_ms) || 0) + ' ms');
   } catch (error) { if (epoch === modelEpoch) modelOperationError(error); }
   finally { if (epoch === modelEpoch) { modelBusy = false; renderModelList(); } }
 }
@@ -3780,6 +4301,7 @@ ms('clear').addEventListener('change', () => { if (ms('clear').checked) clearMod
 for (const name of ['default','judge','enabled']) ms(name).addEventListener('change', markModelDirty);
 ms('close').addEventListener('click', closeModelForm);
 ms('save').addEventListener('click', saveModelSettings);
+ms('test').addEventListener('click', () => { if (modelEditing >= 0) testModelConnection(modelEditing); });
 ms('reload').addEventListener('click', () => {
   if ((modelDirty || ms('key').value) && !confirm('重新加载将丢弃所有未保存修改及 Key，继续？')) return;
   clearModelKey();
@@ -3821,27 +4343,6 @@ async function loadModels() {
     const data = await api("/api/models");
     const models = data.models || [];
     const mock = data.mock === true;
-    document.getElementById("model-mode").textContent = mock
-      ? "模拟模式：网关使用模拟响应，不代表任何真实模型已联通。"
-      : "真实上游模式：密钥状态仅表示本机配置情况，未验证真实联通。";
-    const judge = models.find(model => model.id === data.judge_profile);
-    let judgeStatus = data.judge_enabled ? "已启用" : "未启用（skipped）";
-    if (data.judge_enabled) {
-      if (!judge || !judge.judge) judgeStatus += " · 裁判配置不可用";
-      else judgeStatus += judge.key_configured ? " · 密钥已配置（未验证真实联通）" : " · 未配置密钥（skipped）";
-    }
-    document.getElementById("model-judge").textContent = "当前独立裁判：" + judgeStatus +
-      "；模型别名：" + (data.judge_profile || "未选择") +
-      (mock ? "。网关处于模拟模式；裁判状态独立，不据此推断其已联通或为模拟。" : "");
-    document.getElementById("model-catalog").innerHTML = models.map(model =>
-      '<tr><td><code>' + esc(model.id) + '</code></td><td>' + esc(model.provider) + '</td>' +
-      '<td>' + esc(model.model) + '</td><td>' +
-      esc([model.gateway ? '网关' : '', model.judge ? '裁判' : ''].filter(Boolean).join(' / ') || '未启用用途') +
-      '</td><td>' + esc(model.key_configured ? '密钥已配置' : '未配置') +
-      (mock ? '（网关为模拟模式）' : '') + '</td><td>' +
-      esc('流式：' + (model.supports_stream ? '支持' : '不支持') + '；JSON 对象：' +
-        (model.supports_json_object ? '支持' : '不支持')) + '</td></tr>'
-    ).join("") || '<tr><td colspan="6" class="empty">暂无模型配置</td></tr>';
     const available = mock ? [{id: "mock-model"}] : models.filter(model => model.gateway && model.key_configured);
     select.innerHTML = available.length ? available.map(model =>
       '<option value="' + esc(model.id) + '">' + esc(model.id) + (mock ? '（模拟模式）' : '') + '</option>'
@@ -3849,9 +4350,6 @@ async function loadModels() {
     select.disabled = !available.length;
     if (available.some(model => model.id === previous)) select.value = previous;
   } catch (error) {
-    document.getElementById("model-mode").textContent = "模型目录加载失败：" + error.message;
-    document.getElementById("model-judge").textContent = "当前裁判状态未知";
-    document.getElementById("model-catalog").innerHTML = '<tr><td colspan="6" class="empty">模型目录不可用，请刷新重试</td></tr>';
     select.innerHTML = '<option value="">模型目录不可用</option>';
     select.disabled = true;
   }
@@ -3919,7 +4417,8 @@ async function loadAgents() {
       '<td>' + Number(a.received_count || 0) + '</td><td>' + Number(a.report_count || 0) + '</td>' +
       '<td><button data-agent-open="' + esc(a.agent_id) + '">接入配置</button> ' +
       '<button data-agent-toggle="' + esc(a.agent_id) + '" data-enabled="' + (a.enabled ? '0' : '1') + '"' +
-      (can("admin") ? '' : ' disabled') + '>' + (a.enabled ? '禁用' : '启用') + '</button></td></tr>'
+      (can("admin") ? '' : ' disabled') + '>' + (a.enabled ? '禁用' : '启用') + '</button> ' +
+      '<button data-agent-delete="' + esc(a.agent_id) + '"' + (can("admin") ? '' : ' disabled') + '>删除</button></td></tr>'
     ).join("") || '<tr><td colspan="6" class="empty">尚未注册智能体</td></tr>';
   } catch (error) { agentMessage(error.message); }
 }
@@ -3937,12 +4436,26 @@ async function loadSystemStatus() {
   message.textContent = "加载中…";
   try {
     const data = await api("/api/system/status");
+    const modeSelect = document.getElementById("global-mode");
+    const modeButton = document.getElementById("global-mode-save");
+    const modeMsg = document.getElementById("global-mode-msg");
+    modeSelect.value = data.mode === "enforce" ? "enforce" : "shadow";
+    modeSelect.disabled = Boolean(data.mode_locked);
+    modeButton.disabled = Boolean(data.mode_locked);
+    if (data.mode_locked) {
+      modeMsg.textContent = "当前由启动参数锁定；去掉 --mode / SAFEORBIT_MODE 后可在网页切换";
+    } else if (data.mode_source === "admin") {
+      modeMsg.textContent = "已由管理员在网页设置，重启后仍生效";
+    } else {
+      modeMsg.textContent = "当前为默认值；切换后立即生效并持久化";
+    }
     const rows = [
       ["版本", data.version, "当前运行版本"],
       ["运行模式", data.mode === "shadow" ? "影子模式" : "拦截模式", "enforce 才会阻断调用"],
       ["运行时长", uptimeText(data.uptime_seconds), "本次进程启动至今"],
       ["数据库", data.db_ok ? "正常" : "异常", data.db_ok ? "读写可用" : "检查 SQLite 路径与磁盘权限"],
       ["语义裁判", data.judge_enabled ? "已启用" : "未启用", data.judge_enabled ? "异步执行，失败自动降级" : "仅规则审计"],
+      ["行为事件", String(Number((data.events || {}).events || 0)), "已入库的规范化事件"],
     ];
     const circuits = data.circuits || {};
     const names = Object.keys(circuits).sort();
@@ -3964,6 +4477,30 @@ async function loadSystemStatus() {
   }
 }
 document.getElementById("system-status-refresh").addEventListener("click", loadSystemStatus);
+document.getElementById("global-mode-save").addEventListener("click", async () => {
+  const select = document.getElementById("global-mode");
+  const button = document.getElementById("global-mode-save");
+  const message = document.getElementById("global-mode-msg");
+  const mode = select.value;
+  if (mode === "enforce" && !window.confirm(
+    "切换到拦截模式后，已设为「允许阻断」的智能体将真正拒绝危险调用。确认切换？"
+  )) return;
+  button.disabled = true;
+  message.textContent = "切换中…";
+  try {
+    const data = await api("/api/system/mode", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({mode: mode})
+    });
+    message.textContent = "已切换为" + (data.mode === "enforce" ? "拦截模式" : "影子模式");
+    await loadSystemStatus();
+    refreshTraces();
+  } catch (error) {
+    message.textContent = error.message;
+    button.disabled = false;
+  }
+});
 async function loadAgentKeys() {
   if (!can("admin") || !selectedAgent) return;
   const id = selectedAgent;
@@ -4071,12 +4608,36 @@ document.getElementById("agents").addEventListener("click", async event => {
   const open = event.target.closest("button[data-agent-open]");
   if (open) { await selectAgent(open.dataset.agentOpen); return; }
   const toggle = event.target.closest("button[data-agent-toggle]");
-  if (!toggle || !can("admin")) return;
+  if (toggle) {
+    if (!can("admin")) return;
+    clearAgentSecret();
+    try {
+      await api(agentPath(toggle.dataset.agentToggle), {method: "PATCH", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({enabled: toggle.dataset.enabled === "1"})});
+      await loadAgents();
+    } catch (error) { agentMessage(error.message); }
+    return;
+  }
+  const remove = event.target.closest("button[data-agent-delete]");
+  if (!remove || !can("admin")) return;
+  const agentId = remove.dataset.agentDelete;
+  if (!window.confirm("删除智能体 " + agentId + "？其 Key 会立即失效，历史轨迹与报告保留。")) return;
   clearAgentSecret();
   try {
-    await api(agentPath(toggle.dataset.agentToggle), {method: "PATCH", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({enabled: toggle.dataset.enabled === "1"})});
+    await api(agentPath(agentId), {method: "DELETE"});
+    agentMessage("已删除 " + agentId);
+    if (selectedAgent === agentId) {
+      selectedAgent = null;
+      document.getElementById("agent-detail").hidden = true;
+      document.getElementById("agent-keys").textContent = "";
+      document.getElementById("agent-snippet").textContent = "";
+    }
+    if (navState.agentId === agentId) {
+      navState.agentId = null;
+      if (navState.module === "agent" || navState.module === "task") setModule("agents");
+    }
     await loadAgents();
+    await refreshNav(true);
   } catch (error) { agentMessage(error.message); }
 });
 document.getElementById("agent-keys").addEventListener("click", async event => {
@@ -4091,26 +4652,41 @@ document.getElementById("agent-keys").addEventListener("click", async event => {
 });
 window.addEventListener("pagehide", clearAgentSecret);
 
-// ------------------------- 三层导航（L1 / L2 / L3） -------------------------
-const NAV_KEY = "safeorbit.nav.v1";
+// ------------------------- 单侧边栏导航（固定模块 / 任务组 / 身份） -------------------------
+const NAV_KEY = "safeorbit.nav.v2";
+const TASK_KEY = "safeorbit.tasks.v1";
 const MODULE_META = {
-  guide: {label: "使用导航", panel: "guide", full: true},
-  overview: {label: "总览", panel: "overview", full: true},
+  guide: {label: "使用导航", panel: "guide"},
+  overview: {label: "总览", panel: "overview"},
   runs: {label: "运行记录", panel: "traces"},
+  audit: {label: "审计视图", panel: "audit"},
   approvals: {label: "审批队列", panel: "dispositions"},
   policies: {label: "策略配置", panel: "policies"},
-  agents: {label: "智能体接入", panel: "agents"},
-  settings: {label: "设置", panel: "settings"},
+  codeaudit: {label: "代码审计", panel: "codeaudit"},
+  redteam: {label: "红队检测", panel: "redteam"},
+  agents: {label: "Agent 管理", panel: "agents"},
+  models: {label: "系统设置", panel: "settings"},
+  settings: {label: "系统设置", panel: "settings"},
+  agent: {label: "Agent 工作台", panel: "agent"},
+  task: {label: "任务详情", panel: "task"},
+  account: {label: "设置", panel: "account"},
 };
+const GUIDE_MODULES = ["guide", "overview", "runs", "approvals", "policies", "codeaudit", "redteam"];
 let navRuns = [];
 let navApprovals = [];
 let navPolicies = [];
 let navAgents = [];
-let navState = {module: "guide", panel: "guide", view: "timeline", runId: null, width: 260, collapsed: false};
+let navTasks = [];
+let navState = {
+  module: "guide", panel: "guide", view: "timeline", runId: null,
+  agentId: null, taskId: null, agentTab: "total",
+  groups: {agents: true, agent_audit: true, code_audit: true, redteam: true},
+  width: 252, collapsed: false,
+};
 let navLoadedAt = 0;
 let overlayOpen = false;
 
-function narrowMode() { return window.matchMedia("(max-width: 1279px)").matches; }
+function narrowMode() { return window.matchMedia("(max-width: 1023px)").matches; }
 
 function loadNavState() {
   try {
@@ -4121,8 +4697,16 @@ function loadNavState() {
       navState.panel = MODULE_META[raw.module].panel;
     }
     if (["timeline", "table", "agent"].includes(raw.view)) navState.view = raw.view;
+    if (["total", "records"].includes(raw.agentTab)) navState.agentTab = raw.agentTab;
     if (typeof raw.runId === "string" && raw.runId) navState.runId = raw.runId;
-    navState.width = Math.min(340, Math.max(220, Number(raw.width) || 260));
+    if (typeof raw.agentId === "string" && raw.agentId) navState.agentId = raw.agentId;
+    if (typeof raw.taskId === "string" && raw.taskId) navState.taskId = raw.taskId;
+    if (raw.groups && typeof raw.groups === "object") {
+      Object.keys(navState.groups).forEach(key => {
+        if (typeof raw.groups[key] === "boolean") navState.groups[key] = raw.groups[key];
+      });
+    }
+    navState.width = Math.min(360, Math.max(232, Number(raw.width) || 252));
     navState.collapsed = !!raw.collapsed;
   } catch (error) {}
 }
@@ -4131,6 +4715,8 @@ function persistNav() {
   try {
     localStorage.setItem(NAV_KEY, JSON.stringify({
       module: navState.module, view: navState.view, runId: navState.runId,
+      agentId: navState.agentId, taskId: navState.taskId, agentTab: navState.agentTab,
+      groups: navState.groups,
       width: navState.width, collapsed: navState.collapsed,
     }));
   } catch (error) {}
@@ -4138,40 +4724,25 @@ function persistNav() {
 
 function applyResponsive() {
   const app = document.getElementById("app");
-  const l2 = document.getElementById("l2");
-  const scrim = document.getElementById("l2-scrim");
-  if (!app || !l2) return;
-  const meta = MODULE_META[navState.module];
-  if (meta && meta.full) {
-    // 总览 / 使用导航不设二级栏，内容直接铺满右侧主区
-    overlayOpen = false;
-    l2.classList.remove("overlay-open", "floating");
-    l2.classList.add("collapsed");
-    app.style.setProperty("--l2w", "0px");
-    if (scrim) scrim.hidden = true;
-    const toggle = document.getElementById("l2-collapse");
-    if (toggle) toggle.textContent = "»";
-    return;
-  }
+  const side = document.getElementById("side");
+  const scrim = document.getElementById("side-scrim");
+  if (!app || !side) return;
   if (narrowMode()) {
-    app.style.setProperty("--l2w", "0px");
-    l2.classList.remove("collapsed");
-    l2.classList.toggle("overlay-open", overlayOpen);
+    app.style.setProperty("--sidew", "0px");
+    side.classList.remove("collapsed");
+    side.classList.toggle("overlay-open", overlayOpen);
     if (scrim) scrim.hidden = !overlayOpen;
   } else {
     overlayOpen = false;
-    l2.classList.remove("overlay-open", "floating");
-    app.style.setProperty("--l2w", navState.collapsed ? "0px" : navState.width + "px");
-    l2.classList.toggle("collapsed", navState.collapsed);
+    app.style.setProperty("--sidew", navState.collapsed ? "0px" : navState.width + "px");
+    side.classList.toggle("collapsed", navState.collapsed);
     if (scrim) scrim.hidden = true;
   }
-  const toggle = document.getElementById("l2-collapse");
+  const toggle = document.getElementById("side-collapse");
   if (toggle) toggle.textContent = narrowMode() ? "×" : (navState.collapsed ? "»" : "«");
 }
 
-function toggleL2() {
-  const meta = MODULE_META[navState.module];
-  if (meta && meta.full) return;
+function toggleSide() {
   if (narrowMode()) {
     overlayOpen = !overlayOpen;
   } else {
@@ -4182,11 +4753,27 @@ function toggleL2() {
   applyResponsive();
 }
 
+function closeSideOverlay() {
+  if (!narrowMode()) return;
+  overlayOpen = false;
+  applyResponsive();
+}
+
 function syncModuleActive() {
-  document.querySelectorAll(".l1-btn").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.module === navState.module);
-    btn.setAttribute("aria-current", btn.dataset.module === navState.module ? "page" : "false");
+  const active = navState.module;
+  document.querySelectorAll("[data-module]").forEach(node => {
+    const on = node.dataset.module === active;
+    node.classList.toggle("active", on);
+    if (node.tagName === "BUTTON") node.setAttribute("aria-current", on ? "page" : "false");
   });
+  const guide = document.getElementById("side-guide-toggle");
+  if (guide) guide.classList.toggle("active", GUIDE_MODULES.includes(active));
+  document.querySelectorAll("[data-agent-row]").forEach(node =>
+    node.classList.toggle("active", active === "agent" && node.dataset.agentRow === navState.agentId));
+  document.querySelectorAll("[data-task-row]").forEach(node =>
+    node.classList.toggle("active", active === "task" && node.dataset.taskRow === navState.taskId));
+  const user = document.getElementById("side-user");
+  if (user) user.classList.toggle("active", active === "account");
 }
 
 function verdictColor(verdict) {
@@ -4228,26 +4815,141 @@ function pendingByTrace() {
   return map;
 }
 
-function renderL2Runs() {
-  if (!navRuns.length) return '<div class="l2-empty">还没有运行记录</div>';
-  const pending = pendingByTrace();
-  let html = "";
-  let lastDay = "";
-  navRuns.forEach(run => {
-    const day = dayLabel(run.created_at);
-    if (day !== lastDay) {
-      html += '<div class="l2-section"><span>' + esc(day) + '</span><span>' + esc(String(navRuns.filter(item => dayLabel(item.created_at) === day).length)) + '</span></div>';
-      lastDay = day;
-    }
-    const waiting = pending[run.trace_id] || 0;
-    html += '<button type="button" class="l2-row' + (navState.runId === run.trace_id ? " active" : "") +
-      '" data-run="' + esc(run.trace_id) + '">' +
-      '<span class="dot" style="background:' + verdictColor(run.verdict) + '"></span>' +
-      '<span class="name">' + esc(run.trace_id) + '</span>' +
-      '<span class="meta">' + esc(run.agent_id || "-") + ' · ' + relTime(run.created_at) +
-        (waiting ? ' · <b class="hot">' + waiting + ' 待审</b>' : '') + '</span></button>';
-  });
-  return html;
+// ------------------------- 任务（本地持久化） -------------------------
+const TASK_TYPES = {
+  agent_audit: {label: "Agent 审计", group: "Agent 审计"},
+  code_audit: {label: "代码审计", group: "代码审计"},
+  redteam: {label: "红队检测", group: "红队检测"},
+};
+
+function loadTasks() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(TASK_KEY) || "[]");
+    navTasks = Array.isArray(raw)
+      ? raw.filter(item => item && item.id && TASK_TYPES[item.type])
+      : [];
+  } catch (error) { navTasks = []; }
+}
+
+function saveTasks() {
+  try { localStorage.setItem(TASK_KEY, JSON.stringify(navTasks.slice(0, 120))); } catch (error) {}
+}
+
+function newTaskId(prefix) {
+  return prefix + "-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 6);
+}
+
+function addTask(task) {
+  navTasks.unshift(task);
+  saveTasks();
+  renderSide();
+  return task;
+}
+
+function patchTask(id, patch) {
+  const task = findTask(id);
+  if (!task) return;
+  Object.assign(task, patch);
+  saveTasks();
+  renderSide();
+}
+
+function findTask(id) { return navTasks.find(item => item.id === id) || null; }
+
+function taskStatusColor(status) {
+  if (status === "running") return "var(--amber)";
+  if (status === "failed") return "var(--red)";
+  return "var(--green)";
+}
+
+function agentRuns(agentId) {
+  return navRuns.filter(run => run.agent_id === agentId);
+}
+
+function agentTaskCount(agentId) {
+  return navTasks.filter(item => item.agent_id === agentId).length;
+}
+
+function pendingAgentCount(agentId) {
+  return navApprovals.filter(item => item.status === "proposed" && item.agent_id === agentId).length;
+}
+
+function renderSideTasks(type) {
+  const items = navTasks.filter(item => item.type === type).slice(0, 6);
+  if (!items.length) return '<div class="side-empty">还没有任务</div>';
+  return items.map(item =>
+    '<button type="button" class="side-item' + (navState.module === "task" && navState.taskId === item.id ? " active" : "") +
+      '" data-task-row="' + esc(item.id) + '">' +
+      '<span class="dot" style="background:' + taskStatusColor(item.status) + '"></span>' +
+      '<span class="name">' + esc(item.title) + '</span>' +
+      '<span class="meta">' + (item.status === "running" ? "进行中" : esc(relTime(item.created_at))) + '</span>' +
+    '</button>').join("");
+}
+
+const GROUP_ICONS = {
+  agents: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4z"/><path d="M3.6 19.4c0-3 2.4-5 5.4-5s5.4 2 5.4 5"/><path d="M16 5.9a3 3 0 0 1 0 5.6"/><path d="M17.4 14.9c2 .6 3.1 2.2 3.1 4.1"/></svg>',
+  agent_audit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="4.6" width="13" height="15.9" rx="2"/><path d="M9 4.6V3.2h6v1.4"/><path d="m9 12.6 2 2 4-4"/></svg>',
+  code_audit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8.8 8.2-4 3.8 4 3.8"/><path d="m15.2 8.2 4 3.8-4 3.8"/></svg>',
+  redteam: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7.6"/><circle cx="12" cy="12" r="3"/><path d="M12 2.4v2.6M12 19v2.6M2.4 12h2.6M19 12h2.6"/></svg>',
+};
+
+function renderSide() {
+  const groups = document.getElementById("side-groups");
+  if (!groups) return;
+  const agentRows = navAgents.length
+    ? navAgents.map(agent => {
+        const runs = agentRuns(agent.agent_id);
+        const waiting = pendingAgentCount(agent.agent_id);
+        return '<button type="button" class="side-item' +
+          (navState.module === "agent" && navState.agentId === agent.agent_id ? " active" : "") +
+          '" data-agent-row="' + esc(agent.agent_id) + '" title="' + esc(agent.name || agent.agent_id) + '">' +
+          '<span class="dot" style="background:' + (agent.enabled ? "var(--green)" : "#5f656d") + '"></span>' +
+          '<span class="name">' + esc(agent.name || agent.agent_id) + '</span>' +
+          '<span class="meta">' + (waiting ? '<b class="hot">' + waiting + ' 待审</b>' : runs.length + " 运行") +
+          '</span></button>';
+      }).join("")
+    : '<div class="side-empty">还没有 Agent，去「Agent 管理」注册。</div>';
+
+  const count = type => navTasks.filter(item => item.type === type).length;
+  const groupHtml = (key, label, total, body, extra) => {
+    const open = navState.groups[key] !== false;
+    return '<div class="side-group">' +
+      '<div class="side-group-head">' +
+        '<button type="button" class="side-group-toggle" data-group-toggle="' + key + '"' +
+          ' aria-expanded="' + String(open) + '">' +
+          (GROUP_ICONS[key] || "") +
+          '<span>' + esc(label) + '</span><span class="count">' + total + '</span>' +
+          '<span class="caret" aria-hidden="true">›</span></button>' +
+        (extra || "") +
+      '</div>' +
+      '<div class="side-group-body"' + (open ? "" : " hidden") + '>' + body + '</div>' +
+    '</div>';
+  };
+  // 可点击的分区入口：点击直接打开对应页面
+  const linkHtml = (key, module, label) =>
+    '<div class="side-group">' +
+      '<div class="side-group-head">' +
+        '<button type="button" class="side-group-toggle" data-module="' + module + '">' +
+          (GROUP_ICONS[key] || "") + '<span>' + esc(label) + '</span></button>' +
+      '</div>' +
+    '</div>';
+  const navRow = (module, label, extra) =>
+    '<button class="side-sub-row" type="button" data-module="' + module + '">' + label + (extra || "") + '</button>';
+  const auditNavRows = '<div class="side-sub">' +
+    navRow("overview", "总览") +
+    navRow("runs", "运行记录") +
+    navRow("audit", "审计视图") +
+    navRow("approvals", "审批队列", '<span class="side-count" id="side-approval-count" hidden>0</span>') +
+    navRow("policies", "策略配置") +
+    '</div>';
+  groups.innerHTML =
+    groupHtml("agents", "现有 Agent", navAgents.length, agentRows,
+      '<button type="button" class="side-add" data-agents-section="register" title="注册智能体">+</button>') +
+    groupHtml("agent_audit", "Agent 审计", "", auditNavRows) +
+    linkHtml("code_audit", "codeaudit", "代码审计") +
+    linkHtml("redteam", "redteam", "红队检测");
+  updateApprovalBadge();
+  syncModuleActive();
 }
 
 function runItemHtml(run, pending) {
@@ -4294,77 +4996,8 @@ function renderRunViews() {
   if (agents) agents.innerHTML = renderRunAgentGroups(pending);
 }
 
-function renderL2Approvals() {
-  if (!navApprovals.length) return '<div class="l2-empty">暂无审批项</div>';
-  const groups = {high: [], medium: [], low: []};
-  navApprovals.forEach(item => {
-    const level = approvalRisk(item).level;
-    (groups[level] || groups.medium).push(item);
-  });
-  const labels = {high: "高风险", medium: "中风险", low: "低风险"};
-  const colors = {high: "var(--red)", medium: "var(--amber)", low: "#9dc0e6"};
-  let html = "";
-  ["high", "medium", "low"].forEach(level => {
-    if (!groups[level].length) return;
-    html += '<div class="l2-section"><span>' + labels[level] + '</span><span>' + groups[level].length + '</span></div>';
-    groups[level].forEach(item => {
-      const pending = item.status === "proposed";
-      html += '<button type="button" class="l2-row" data-approval-id="' + esc(item.approval_id) + '">' +
-        '<span class="dot" style="background:' + colors[level] + '"></span>' +
-        '<span class="name">' + esc(item.tool_name) + ' · ' + esc(item.agent_id) + '</span>' +
-        '<span class="meta">' + esc(timeText(item.created_at)) + ' · ' +
-          (pending
-            ? '<span data-expires="' + esc(item.expires_at || "") + '">' + countdownText(item.expires_at) + '</span>'
-            : esc(item.status_text || item.status)) +
-        '</span></button>';
-    });
-  });
-  return html;
-}
-
-function renderL2Policies() {
-  if (!navPolicies.length) return '<div class="l2-empty">暂无策略</div>';
-  let html = '<div class="l2-section"><span>策略</span><span>' + navPolicies.length + '</span></div>';
-  navPolicies.forEach(item => {
-    const mode = item.mode === "enforce" ? "允许阻断" : "仅记录";
-    html += '<button type="button" class="l2-row" data-policy="' + esc(item.agent_id) + '">' +
-      '<span class="dot" style="background:' + (item.mode === "enforce" ? "var(--amber)" : "var(--green)") + '"></span>' +
-      '<span class="name">' + esc(item.name || item.agent_id) + '</span>' +
-      '<span class="meta">' + esc(item.agent_id) + ' · ' + mode + '</span></button>';
-  });
-  return html;
-}
-
-function renderL2Settings() {
-  const rows = [
-    ["codeaudit", "代码检查", "拖拽上传或本机路径扫描"],
-    ["models", "模型设置", "模型目录与裁判状态"],
-  ];
-  return '<div class="l2-section"><span>设置</span><span></span></div>' +
-    rows.map(item => {
-      const active = (item[0] === "codeaudit" && navState.panel === "codeaudit") ||
-        (item[0] === "models" && navState.panel === "settings");
-      return '<button type="button" class="l2-row' + (active ? " active" : "") + '" data-setting="' + item[0] + '">' +
-        '<span></span><span class="name">' + esc(item[1]) + '</span>' +
-        '<span class="meta">' + esc(item[2]) + '</span></button>';
-    }).join("");
-}
-
 function pendingApprovalCount() {
   return navApprovals.filter(item => item.status === "proposed").length;
-}
-
-function renderL2Agents() {
-  const rows = [
-    ["access", "接入说明", "地址与拦截边界"],
-    ["manage", "智能体管理", navAgents.length + " 个"],
-    ["version", "版本对比", "风险变化"],
-    ["governance", "数据保留", "清理与导出"],
-  ];
-  return '<div class="l2-section"><span>智能体接入</span><span></span></div>' +
-    rows.map(item => '<button type="button" class="l2-row" data-agents-section="' + item[0] + '">' +
-      '<span></span><span class="name">' + esc(item[1]) + '</span>' +
-      '<span class="meta">' + esc(item[2]) + '</span></button>').join("");
 }
 
 function renderGuide() {
@@ -4421,16 +5054,21 @@ function renderGuide() {
 }
 
 function scrollAgentsSection(key) {
+  if (key === "governance") { sysSection = "data"; setModule("models"); applySysTabs(); return; }
   setModule("agents");
   let card = null;
-  if (key === "manage") card = document.getElementById("agent-management-card");
+  if (key === "manage" || key === "register") card = document.getElementById("agent-management-card");
   else if (key === "version") card = document.getElementById("version-card");
-  else if (key === "governance") card = document.getElementById("data-governance-card");
   else card = document.querySelector("#panel-agents .gateway-hint");
   if (card) {
     if (card.tagName === "DETAILS") card.open = true;
     card.scrollIntoView({block: "start"});
   }
+  if (key === "register") {
+    const input = document.getElementById("agent-id");
+    if (input) input.focus();
+  }
+  closeSideOverlay();
 }
 
 document.getElementById("panel-guide").addEventListener("click", event => {
@@ -4449,20 +5087,11 @@ document.getElementById("panel-guide").addEventListener("click", event => {
   if (go) setModule(go.dataset.guideGo);
 });
 
-function renderL2() {
-  const title = document.getElementById("l2-title");
-  const body = document.getElementById("l2-body");
-  if (!body) return;
-  const meta = MODULE_META[navState.module];
-  if (title) title.textContent = meta ? meta.label : "导航";
-  if (meta && meta.full) { body.innerHTML = ""; return; }
-  let html = "";
-  if (navState.module === "runs") html = renderL2Runs();
-  else if (navState.module === "approvals") html = renderL2Approvals();
-  else if (navState.module === "policies") html = renderL2Policies();
-  else if (navState.module === "agents") html = renderL2Agents();
-  else if (navState.module === "settings") html = renderL2Settings();
-  body.innerHTML = html;
+function renderNav() {
+  renderSide();
+  renderAgentPage();
+  renderTaskPage();
+  renderAccount();
 }
 
 function renderToolbar() {
@@ -4470,19 +5099,23 @@ function renderToolbar() {
   if (!crumb) return;
   const meta = MODULE_META[navState.module] || MODULE_META.overview;
   let html = "<span>" + esc(meta.label) + "</span>";
-  if (navState.module === "settings") {
-    html += "<span>/</span><b>" + esc(navState.panel === "codeaudit" ? "代码检查" : "模型设置") + "</b>";
+  if (navState.module === "agent" && navState.agentId) {
+    html += "<span>/</span><b>" + esc(navState.agentId) + "</b>";
   }
-  if (navState.module === "runs" && navState.runId) {
+  if (navState.module === "task") {
+    const task = findTask(navState.taskId);
+    if (task) html += "<span>/</span><b>" + esc(task.title) + "</b>";
+  }
+  if (navState.module === "audit" && navState.runId) {
     html += "<span>/</span><b>" + esc(navState.runId) + "</b>";
-    html += '<button type="button" class="small" data-crumb-back="1">返回列表</button>';
+    html += '<button type="button" class="small" data-crumb-back="1">返回运行记录</button>';
   }
   crumb.innerHTML = html;
   const views = document.getElementById("tb-views");
-  if (views) views.hidden = !(navState.module === "runs" && !navState.runId);
+  if (views) views.hidden = navState.module !== "runs";
   const navBtn = document.getElementById("tb-nav");
   if (navBtn) {
-    navBtn.hidden = !!(meta && meta.full);
+    navBtn.hidden = false;
     navBtn.setAttribute("aria-expanded", narrowMode() ? String(overlayOpen) : String(!navState.collapsed));
   }
   document.querySelectorAll(".tb-seg").forEach(btn => btn.classList.toggle("active", btn.dataset.view === navState.view));
@@ -4497,54 +5130,486 @@ function applyRunView(view) {
   persistNav();
 }
 
-function showRunDetail(traceId) {
-  navState.module = "runs";
-  navState.panel = "traces";
-  navState.runId = traceId;
-  document.querySelectorAll(".run-view").forEach(node => node.classList.remove("active"));
+function applyAuditVisibility() {
+  const has = Boolean(navState.runId);
   const replay = document.getElementById("replay");
-  if (replay) replay.style.display = "block";
-  syncModuleActive();
-  renderL2();
+  const empty = document.getElementById("audit-empty");
+  if (replay) replay.style.display = has ? "block" : "none";
+  if (empty) empty.hidden = has;
+}
+
+function showRunDetail(traceId) {
+  navState.runId = traceId;
+  setModule("audit");
+  navState.runId = traceId;
+  applyAuditVisibility();
   renderToolbar();
   persistNav();
 }
 
 function exitRunDetail() {
   navState.runId = null;
-  const replay = document.getElementById("replay");
-  if (replay) replay.style.display = "none";
-  applyRunView(navState.view);
-  renderL2();
+  setModule("runs");
+}
+
+// ------------------------- Agent 工作台 -------------------------
+let agentPageSig = "";
+let taskPageSig = "";
+
+function agentRecord(agentId) {
+  return navAgents.find(item => item.agent_id === agentId) || null;
+}
+
+function agentRunListHtml(runs) {
+  if (!runs.length) {
+    return '<div class="agent-form-note">还没有该 Agent 的运行记录。先让它通过网关或 /v1/ingest 上报一条轨迹。</div>';
+  }
+  return '<div class="task-list">' + runs.map(run =>
+    '<button type="button" class="task-row" data-run-open="' + esc(run.trace_id) + '">' +
+      '<span class="dot" style="width:6px;height:6px;border-radius:50%;background:' + verdictColor(run.verdict) + '"></span>' +
+      '<span>' + esc(run.trace_id) + '</span>' +
+      '<span class="meta">' + esc(LABELS[run.verdict] || run.verdict || "-") + ' · ' + Number(run.hits_count || 0) + ' 命中</span>' +
+      '<span class="meta">' + esc(relTime(run.created_at)) + '</span></button>').join("") + '</div>';
+}
+
+function agentTaskListHtml(items) {
+  if (!items.length) return '<div class="agent-form-note">还没有任务。用上方的「新增 Agent 审计」「代码审计」「红队检测」发起。</div>';
+  return '<div class="task-list">' + items.map(item =>
+    '<button type="button" class="task-row" data-task-open="' + esc(item.id) + '">' +
+      '<span class="dot" style="width:6px;height:6px;border-radius:50%;background:' + taskStatusColor(item.status) + '"></span>' +
+      '<span>' + esc(item.title) + '</span>' +
+      '<span class="meta">' + esc(TASK_TYPES[item.type].label) + '</span>' +
+      '<span class="meta">' + esc(relTime(item.created_at)) + '</span></button>').join("") + '</div>';
+}
+
+function renderAgentPage(force) {
+  const panel = document.getElementById("panel-agent");
+  const body = document.getElementById("agent-page-body");
+  if (!panel || !body) return;
+  if (!panel.classList.contains("active")) return;
+  const tab = navState.agentTab;
+  const agent = agentRecord(navState.agentId);
+  const sig = [navState.agentId, tab, navAgents.length, navRuns.length, navTasks.length, navApprovals.length].join("|");
+  if (!force && sig === agentPageSig) return;
+  agentPageSig = sig;
+
+  const title = document.getElementById("agent-page-title");
+  const meta = document.getElementById("agent-page-meta");
+  const actions = document.getElementById("agent-page-actions");
+  document.querySelectorAll("[data-agent-tab]").forEach(btn =>
+    btn.classList.toggle("active", btn.dataset.agentTab === tab));
+
+  if (!agent) {
+    if (title) title.textContent = "智能体";
+    if (meta) meta.textContent = "还没有选择智能体。注册后即可在这里发起审计任务。";
+    if (actions) actions.innerHTML = "";
+    body.innerHTML = '<div class="agent-form-note">左侧「现有 Agent」为空。先到「Agent 管理 → 注册智能体」创建，再回来发起任务。</div>';
+    return;
+  }
+
+  const runs = agentRuns(agent.agent_id);
+  const waiting = pendingAgentCount(agent.agent_id);
+  const tasks = navTasks.filter(item => item.agent_id === agent.agent_id);
+  if (title) title.textContent = agent.name || agent.agent_id;
+  if (meta) {
+    meta.textContent = agent.agent_id + " · " + (agent.enabled ? "已启用" : "已禁用") +
+      " · 已生成报告 " + Number(agent.report_count || 0) + " 条" +
+      " · 最近认证 " + (agent.last_seen || "尚未认证");
+  }
+  if (actions) {
+    actions.innerHTML = '<button class="small" type="button" data-agent-config="' + esc(agent.agent_id) + '">接入配置与 Key</button>';
+  }
+
+  if (tab === "records") {
+    const groups = ["agent_audit", "code_audit", "redteam"];
+    body.innerHTML = groups.map(type => {
+      const items = tasks.filter(item => item.type === type);
+      return '<div class="card wide"><h2>' + esc(TASK_TYPES[type].label) + '</h2>' +
+        agentTaskListHtml(items) + '</div>';
+    }).join("");
+    return;
+  }
+
+  const risky = runs.filter(run => run.verdict && run.verdict !== "pass").length;
+  const cost = runs.reduce((sum, run) => sum + Number(run.cost_usd || 0), 0);
+  body.innerHTML =
+    '<div class="agent-stats">' +
+      '<div class="agent-stat"><div class="k">运行记录</div><div class="v">' + runs.length +
+        '</div><div class="s">' + (runs[0] ? "最近 " + esc(dayLabel(runs[0].created_at)) + " " + esc(timeText(runs[0].created_at)) : "暂无") + '</div></div>' +
+      '<div class="agent-stat"><div class="k">风险记录</div><div class="v" style="color:var(--amber)">' + risky +
+        '</div><div class="s">非通过判定</div></div>' +
+      '<div class="agent-stat"><div class="k">待审批</div><div class="v" style="color:' + (waiting ? "var(--red)" : "inherit") + '">' + waiting +
+        '</div><div class="s">写操作等待人工确认</div></div>' +
+      '<div class="agent-stat"><div class="k">审计任务</div><div class="v">' + tasks.length +
+        '</div><div class="s">累计成本 ' + esc(money(cost)) + '</div></div>' +
+    '</div>' +
+    '<div class="agent-grid">' +
+      '<div class="card"><h2>最近运行</h2>' + agentRunListHtml(runs.slice(0, 6)) + '</div>' +
+      '<div class="card"><h2>任务记录</h2>' + agentTaskListHtml(tasks.slice(0, 8)) + '</div>' +
+    '</div>';
+}
+
+function openAgentPage(agentId) {
+  if (!agentId) return;
+  navState.agentId = agentId;
+  navState.taskId = null;
+  navState.module = "agent";
+  navState.panel = "agent";
+  switchTab("agent");
+  agentPageSig = "";
+  renderAgentPage(true);
   renderToolbar();
+  persistNav();
+  closeSideOverlay();
+}
+
+function setAgentTab(tab) {
+  navState.agentTab = ["total", "audit", "code", "redteam"].includes(tab) ? tab : "total";
+  agentPageSig = "";
+  renderAgentPage(true);
   persistNav();
 }
 
+function agentFormValue(selector) {
+  const node = document.querySelector(selector);
+  return node ? String(node.value || "").trim() : "";
+}
+
+function agentFormStatus(selector, text) {
+  const node = document.querySelector(selector);
+  if (node) node.textContent = text;
+}
+
+async function runAgentAudit() {
+  const agent = agentRecord(navState.agentId);
+  if (!agent) return;
+  const button = document.querySelector("[data-agent-audit-run]");
+  const range = agentFormValue("[data-agent-audit-range]") || "all";
+  const search = agentFormValue("[data-agent-audit-search]").toLowerCase();
+  if (button) button.disabled = true;
+  agentFormStatus("[data-agent-audit-msg]", "读取轨迹中…");
+  try {
+    const data = await api("/api/traces?limit=200&offset=0&agent_id=" + encodeURIComponent(agent.agent_id));
+    let runs = data.traces || [];
+    if (range === "24h" || range === "7d") {
+      const windowMs = (range === "24h" ? 24 : 24 * 7) * 3600 * 1000;
+      const since = Date.now() - windowMs;
+      runs = runs.filter(run => Date.parse(run.created_at) >= since);
+    }
+    if (search) {
+      runs = runs.filter(run =>
+        String(run.trace_id || "").toLowerCase().includes(search) ||
+        String(run.session_id || "").toLowerCase().includes(search));
+    }
+    const counts = {pass: 0, warn: 0, fail: 0, review: 0, other: 0};
+    runs.forEach(run => { counts[run.verdict] = (counts[run.verdict] || 0) + 1; });
+    const risky = runs.filter(run => run.verdict && run.verdict !== "pass").length;
+    const cost = runs.reduce((sum, run) => sum + Number(run.cost_usd || 0), 0);
+    const stamp = new Date().toLocaleString("zh-CN", {hour12: false});
+    const task = addTask({
+      id: newTaskId("audit"), type: "agent_audit", agent_id: agent.agent_id,
+      title: (agent.name || agent.agent_id) + " · 审计 " + stamp,
+      status: runs.length ? "done" : "failed",
+      created_at: new Date().toISOString(),
+      summary: {runs: runs.length, risky: risky, cost: Math.round(cost * 1000000) / 1000000, range: range},
+      detail: {
+        runs: runs.slice(0, 50).map(run => ({
+          trace_id: run.trace_id, verdict: run.verdict,
+          hits_count: run.hits_count, cost_usd: run.cost_usd, created_at: run.created_at,
+        })),
+        counts: counts,
+      },
+    });
+    openTaskPage(task.id);
+  } catch (error) {
+    agentFormStatus("[data-agent-audit-msg]", error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function runAgentCodeAudit() {
+  const agent = agentRecord(navState.agentId);
+  if (!agent) return;
+  const path = agentFormValue("[data-agent-code-path]");
+  if (!path) { agentFormStatus("[data-agent-code-msg]", "请先填写服务器本机路径"); return; }
+  const button = document.querySelector("[data-agent-code-run]");
+  if (button) button.disabled = true;
+  agentFormStatus("[data-agent-code-msg]", "扫描中…");
+  try {
+    const data = await api("/api/codeaudit/scan", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({path: path}),
+    });
+    const report = data.report || {};
+    const findings = report.findings || [];
+    const stamp = new Date().toLocaleString("zh-CN", {hour12: false});
+    const task = addTask({
+      id: newTaskId("code"), type: "code_audit", agent_id: agent.agent_id,
+      title: (agent.name || agent.agent_id) + " · 代码扫描 " + stamp,
+      status: "done",
+      created_at: new Date().toISOString(),
+      summary: {files: report.files_scanned || 0, findings: findings.length},
+      detail: {report_id: report.report_id || "", path: path, findings: findings.slice(0, 120)},
+    });
+    openTaskPage(task.id);
+  } catch (error) {
+    agentFormStatus("[data-agent-code-msg]", error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function runAgentRedteam() {
+  const agent = agentRecord(navState.agentId);
+  if (!agent) return;
+  const button = document.querySelector("[data-agent-redteam-run]");
+  if (button) button.disabled = true;
+  agentFormStatus("[data-agent-redteam-msg]", "运行中…");
+  try {
+    const data = await api("/api/eval/redteam", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({}),
+    });
+    const report = data.report || {};
+    const stamp = new Date().toLocaleString("zh-CN", {hour12: false});
+    const task = addTask({
+      id: newTaskId("red"), type: "redteam", agent_id: agent.agent_id,
+      title: (agent.name || agent.agent_id) + " · 红队 " + stamp,
+      status: "done",
+      created_at: new Date().toISOString(),
+      summary: {total: report.total || 0, detected: report.detected || 0, rate: report.detection_rate || 0},
+      detail: {report_id: report.report_id || "", results: report.results || []},
+    });
+    openTaskPage(task.id);
+  } catch (error) {
+    agentFormStatus("[data-agent-redteam-msg]", error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+// ------------------------- 任务详情 -------------------------
+function renderTaskPage(force) {
+  const panel = document.getElementById("panel-task");
+  const body = document.getElementById("task-body");
+  if (!panel || !body || !panel.classList.contains("active")) return;
+  const task = findTask(navState.taskId);
+  const kind = document.getElementById("task-kind");
+  const title = document.getElementById("task-title");
+  const meta = document.getElementById("task-meta");
+  if (!task) {
+    if (kind) kind.textContent = "TASK / 任务";
+    if (title) title.textContent = "任务不存在";
+    if (meta) meta.textContent = "任务记录保存在本机浏览器；清理站点数据后会丢失。";
+    body.innerHTML = '<div class="agent-form-note">找不到该任务。请从左侧任务组重新打开，或在 Agent 工作台发起新任务。</div>';
+    return;
+  }
+  const sig = task.id + "|" + task.status;
+  if (!force && sig === taskPageSig) return;
+  taskPageSig = sig;
+  const typeMeta = TASK_TYPES[task.type];
+  if (kind) kind.textContent = "TASK / " + typeMeta.group;
+  if (title) title.textContent = task.title;
+  if (meta) {
+    meta.textContent = "Agent " + task.agent_id + " · " +
+      (task.status === "running" ? "进行中" : (task.status === "failed" ? "未完成" : "已完成")) +
+      " · " + new Date(task.created_at).toLocaleString("zh-CN", {hour12: false});
+  }
+
+  if (task.type === "agent_audit") {
+    const summary = task.summary || {};
+    const counts = (task.detail && task.detail.counts) || {};
+    const runs = (task.detail && task.detail.runs) || [];
+    body.innerHTML =
+      '<div class="agent-stats">' +
+        '<div class="agent-stat"><div class="k">覆盖运行</div><div class="v">' + Number(summary.runs || 0) + '</div><div class="s">本次审计样本</div></div>' +
+        '<div class="agent-stat"><div class="k">风险记录</div><div class="v" style="color:var(--amber)">' + Number(summary.risky || 0) + '</div><div class="s">非通过判定</div></div>' +
+        '<div class="agent-stat"><div class="k">通过</div><div class="v" style="color:var(--green)">' + Number(counts.pass || 0) + '</div><div class="s">无命中</div></div>' +
+        '<div class="agent-stat"><div class="k">成本</div><div class="v">' + esc(money(summary.cost || 0)) + '</div><div class="s">样本内模型成本</div></div>' +
+      '</div>' +
+      (runs.length
+        ? '<div class="card"><h2>审计样本</h2>' + agentRunListHtml(runs) + '</div>'
+        : '<div class="agent-form-note">该范围内没有运行记录，任务标记为未完成。调整范围后重新发起即可。</div>');
+    return;
+  }
+
+  if (task.type === "code_audit") {
+    const summary = task.summary || {};
+    const findings = (task.detail && task.detail.findings) || [];
+    body.innerHTML =
+      '<div class="agent-stats">' +
+        '<div class="agent-stat"><div class="k">扫描文件</div><div class="v">' + Number(summary.files || 0) + '</div><div class="s">本次范围</div></div>' +
+        '<div class="agent-stat"><div class="k">问题数</div><div class="v" style="color:var(--amber)">' + Number(summary.findings || 0) + '</div><div class="s">含低危</div></div>' +
+        '<div class="agent-stat"><div class="k">报告编号</div><div class="v" style="font-size:13px">' + esc((task.detail && task.detail.report_id) || "-") + '</div><div class="s">服务端可下载</div></div>' +
+        '<div class="agent-stat"><div class="k">扫描路径</div><div class="v" style="font-size:12px;word-break:break-all">' + esc((task.detail && task.detail.path) || "-") + '</div><div class="s">本机目录</div></div>' +
+      '</div>' +
+      '<div class="card"><h2>问题明细</h2>' +
+        (findings.length
+          ? '<div class="table-scroll" tabindex="0" role="region" aria-label="任务代码审计结果"><table><thead><tr><th>级别</th><th>问题</th><th>位置</th><th>建议</th></tr></thead><tbody>' +
+            findings.map(item =>
+              '<tr><td>' + esc(item.severity || "") + '</td><td>' + esc(item.title || item.rule_id || "") +
+              '</td><td><code>' + esc(item.path || "") + (item.line ? ":" + item.line : "") + '</code></td>' +
+              '<td class="muted">' + esc(item.advice || "") + '</td></tr>').join("") +
+            '</tbody></table></div>'
+          : '<div class="agent-form-note">没有发现问题。</div>') +
+      '</div>';
+    return;
+  }
+
+  const summary = task.summary || {};
+  const results = (task.detail && task.detail.results) || [];
+  body.innerHTML =
+    '<div class="agent-stats">' +
+      '<div class="agent-stat"><div class="k">用例总数</div><div class="v">' + Number(summary.total || 0) + '</div><div class="s">内置攻击集</div></div>' +
+      '<div class="agent-stat"><div class="k">已检出</div><div class="v" style="color:var(--green)">' + Number(summary.detected || 0) + '</div><div class="s">命中护栏规则</div></div>' +
+      '<div class="agent-stat"><div class="k">检出率</div><div class="v">' + percentText(summary.rate || 0) + '</div><div class="s">越高越好</div></div>' +
+      '<div class="agent-stat"><div class="k">漏报</div><div class="v" style="color:var(--red)">' + Math.max(0, Number(summary.total || 0) - Number(summary.detected || 0)) + '</div><div class="s">需要补规则</div></div>' +
+    '</div>' +
+    '<div class="card"><h2>用例结果</h2>' +
+      '<div class="table-scroll" tabindex="0" role="region" aria-label="红队用例结果"><table><thead><tr><th>结果</th><th>提示</th><th>命中规则</th></tr></thead><tbody>' +
+      results.map(item =>
+        '<tr><td style="color:' + (item.detected ? "var(--green)" : "var(--red)") + '">' + (item.detected ? "已检出" : "漏报") +
+        '</td><td>' + esc(item.prompt || "") + '</td><td class="muted">' + esc((item.codes || []).join("、") || "-") + '</td></tr>').join("") +
+      '</tbody></table></div>' +
+    '</div>';
+}
+
+function openTaskPage(taskId) {
+  const task = findTask(taskId);
+  if (!task) return;
+  navState.taskId = taskId;
+  navState.agentId = task.agent_id;
+  navState.module = "task";
+  navState.panel = "task";
+  switchTab("task");
+  taskPageSig = "";
+  renderTaskPage(true);
+  renderToolbar();
+  persistNav();
+  closeSideOverlay();
+}
+
+// ------------------------- 设置 / 身份 -------------------------
+const ROLE_NAMES = {admin: "管理员", auditor: "审计员", operator: "操作员", viewer: "普通用户"};
+let accountUsersLoaded = false;
+
+function renderAccount() {
+  const panel = document.getElementById("panel-account");
+  if (!panel || !panel.classList.contains("active")) return;
+  const box = document.getElementById("account-current");
+  if (box) {
+    box.innerHTML = currentUser
+      ? '<div><span>账号</span><b>' + esc(currentUser.username) + '</b></div>' +
+        '<div><span>显示名称</span><b>' + esc(currentUser.display_name || "-") + '</b></div>' +
+        '<div><span>角色</span><b>' + esc(ROLE_NAMES[currentUser.role] || currentUser.role) + '</b></div>' +
+        '<div><span>租户</span><b>' + esc(currentUser.tenant_id || "default") + '</b></div>'
+      : '<div class="muted">未登录</div>';
+  }
+  const register = document.getElementById("account-register");
+  const hint = document.getElementById("account-register-hint");
+  const admin = can("admin");
+  if (register) register.disabled = !admin;
+  if (hint) hint.textContent = admin
+    ? "管理员可创建账号；新建账号可立即用于切换身份。"
+    : "仅管理员可创建账号，当前身份无权限。";
+  if (admin && !accountUsersLoaded) loadAccountUsers();
+}
+
+async function loadAccountUsers() {
+  const select = document.getElementById("account-switch-user");
+  if (!select) return;
+  try {
+    const data = await api("/api/auth/users");
+    const users = data.users || [];
+    accountUsersLoaded = true;
+    select.innerHTML = '<option value="">手动输入</option>' + users.map(user =>
+      '<option value="' + esc(user.username) + '">' + esc(user.username) +
+      ' · ' + esc(ROLE_NAMES[user.role] || user.role) + (user.disabled ? "（已禁用）" : "") + '</option>').join("");
+  } catch (error) {}
+}
+
+async function switchAccount() {
+  const message = document.getElementById("account-switch-msg");
+  const select = document.getElementById("account-switch-user");
+  const nameInput = document.getElementById("account-switch-name");
+  const passInput = document.getElementById("account-switch-pass");
+  const username = (nameInput.value || select.value || "").trim();
+  const password = passInput.value || "";
+  message.textContent = "";
+  if (!username) { message.textContent = "请选择或填写账号"; return; }
+  if (!password) { message.textContent = "请输入该账号的密码"; return; }
+  try {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {"Content-Type": "application/json", "X-SafeOrbit-CSRF": "1"},
+      body: JSON.stringify({username: username, password: password}),
+    });
+    const data = await response.json();
+    if (!response.ok) { message.textContent = data.detail || "切换失败"; return; }
+    passInput.value = "";
+    message.textContent = "已切换为 " + username + "，正在刷新…";
+    window.setTimeout(() => window.location.reload(), 400);
+  } catch (error) {
+    message.textContent = "切换失败：" + error.message;
+  }
+}
+
+async function registerAccount() {
+  const message = document.getElementById("account-register-msg");
+  const username = document.getElementById("account-new-name").value.trim();
+  const display = document.getElementById("account-new-display").value.trim();
+  const password = document.getElementById("account-new-pass").value;
+  const role = document.getElementById("account-new-role").value;
+  message.textContent = "";
+  if (!username || !password) { message.textContent = "用户名与初始密码必填"; return; }
+  try {
+    await api("/api/auth/users", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({username: username, password: password, role: role, display_name: display}),
+    });
+    document.getElementById("account-new-name").value = "";
+    document.getElementById("account-new-display").value = "";
+    document.getElementById("account-new-pass").value = "";
+    message.textContent = "已创建 " + username + "（" + (ROLE_NAMES[role] || role) + "）";
+    accountUsersLoaded = false;
+    await loadAccountUsers();
+  } catch (error) {
+    message.textContent = error.message;
+  }
+}
+
+// ------------------------- 模块切换 -------------------------
 function setModule(module) {
   if (!MODULE_META[module]) return;
   navState.module = module;
   navState.panel = MODULE_META[module].panel;
-  navState.runId = null;
-  const replay = document.getElementById("replay");
-  if (replay) replay.style.display = "none";
+  if (module !== "audit") navState.runId = null;
+  if (module !== "task") navState.taskId = null;
   document.querySelectorAll(".run-view").forEach(node => {
     node.classList.toggle("active", node.id === "run-view-" + navState.view);
   });
   switchTab(navState.panel);
   overlayOpen = false;
   applyResponsive();
+  renderToolbar();
+  persistNav();
+  closeSideOverlay();
 }
 
 function afterPanelSwitch(panel) {
   navState.panel = panel;
   if (PANEL_TO_MODULE[panel]) navState.module = PANEL_TO_MODULE[panel];
-  if (panel !== "traces") {
-    navState.runId = null;
-    const replay = document.getElementById("replay");
-    if (replay) replay.style.display = "none";
-  }
+  if (panel !== "audit") navState.runId = null;
   syncModuleActive();
-  renderL2();
+  renderSide();
+  renderAgentPage();
+  renderTaskPage();
+  renderAccount();
   renderToolbar();
   applyResponsive();
   persistNav();
@@ -4571,7 +5636,7 @@ function closeDrawer() {
 
 function updateApprovalBadge() {
   const pending = navApprovals.filter(item => item.status === "proposed").length;
-  const badge = document.getElementById("l1-approval-badge");
+  const badge = document.getElementById("side-approval-count");
   if (!badge) return;
   badge.hidden = pending === 0;
   badge.textContent = pending > 99 ? "99+" : String(pending);
@@ -4593,7 +5658,7 @@ async function refreshNav(force) {
     navPolicies = policies.policies || [];
     navAgents = agents.agents || [];
     updateApprovalBadge();
-    renderL2();
+    renderNav();
     renderRunViews();
     renderGuide();
   } catch (error) {}
@@ -4604,70 +5669,73 @@ document.getElementById("l3-body").addEventListener("click", event => {
   if (run) openReplay(run.dataset.runOpen);
 });
 
-// L2 点击与键盘
-document.getElementById("l2-body").addEventListener("click", event => {
-  const run = event.target.closest("[data-run]");
-  if (run) {
-    switchTab("traces");
-    openReplay(run.dataset.run);
-    if (narrowMode() || navState.collapsed) { overlayOpen = false; applyResponsive(); }
+// 侧边栏点击与模块折叠
+document.getElementById("side-body").addEventListener("click", event => {
+  const groupToggle = event.target.closest("[data-group-toggle]");
+  if (groupToggle) {
+    const key = groupToggle.dataset.groupToggle;
+    navState.groups[key] = navState.groups[key] === false;
+    persistNav();
+    renderSide();
     return;
   }
-  const approval = event.target.closest("[data-approval-id]");
-  if (approval) {
-    setModule("approvals");
-    showApprovalDetail(approval.dataset.approvalId);
-    if (narrowMode() || navState.collapsed) { overlayOpen = false; applyResponsive(); }
+  const moduleBtn = event.target.closest("[data-module]");
+  if (moduleBtn) {
+    setModule(moduleBtn.dataset.module);
     return;
   }
-  const policy = event.target.closest("[data-policy]");
-  if (policy) {
-    setModule("policies");
-    if (narrowMode() || navState.collapsed) { overlayOpen = false; applyResponsive(); }
-    return;
-  }
-  const setting = event.target.closest("[data-setting]");
-  if (setting) {
-    const key = setting.dataset.setting;
-    if (key === "models") {
-      setModule("settings");
-      const card = document.getElementById("model-settings");
-      if (card) { card.open = true; card.scrollIntoView({block: "start"}); }
-    } else {
-      switchTab(key);
-    }
-    if (narrowMode() || navState.collapsed) { overlayOpen = false; applyResponsive(); }
-    return;
-  }
+  const agentRow = event.target.closest("[data-agent-row]");
+  if (agentRow) { openAgentPage(agentRow.dataset.agentRow); return; }
+  const taskRow = event.target.closest("[data-task-row]");
+  if (taskRow) { openTaskPage(taskRow.dataset.taskRow); return; }
   const agentsSection = event.target.closest("[data-agents-section]");
-  if (agentsSection) {
-    scrollAgentsSection(agentsSection.dataset.agentsSection);
-    if (narrowMode() || navState.collapsed) { overlayOpen = false; applyResponsive(); }
-    return;
-  }
-  const section = event.target.closest("[data-section]");
-  if (section) {
-    const key = section.dataset.section;
-    if (key === "runs") {
-      setModule("runs");
-    } else if (key === "hotl" || key === "alerts") {
-      const card = document.getElementById(key === "hotl" ? "hotl-card" : key);
-      if (card) { card.open = true; card.scrollIntoView({block: "start"}); }
-    } else {
-      document.getElementById("l3-body").scrollTop = 0;
-    }
-    if (narrowMode() || navState.collapsed) { overlayOpen = false; applyResponsive(); }
-  }
+  if (agentsSection) { scrollAgentsSection(agentsSection.dataset.agentsSection); }
 });
 
-document.getElementById("l2-body").addEventListener("keydown", event => {
+document.getElementById("side-body").addEventListener("keydown", event => {
   if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-  const rows = Array.from(document.querySelectorAll("#l2-body .l2-row"));
+  const rows = Array.from(document.querySelectorAll("#side-body .side-item, #side-body .side-sub-row, #side-body .side-group-toggle"));
   const index = rows.indexOf(document.activeElement);
   if (index < 0) return;
   event.preventDefault();
   const next = rows[Math.min(rows.length - 1, Math.max(0, index + (event.key === "ArrowDown" ? 1 : -1)))];
   if (next) next.focus();
+});
+
+// Agent 工作台交互
+document.getElementById("agent-page-body").addEventListener("click", event => {
+  if (event.target.closest("[data-agent-audit-run]")) { runAgentAudit(); return; }
+  if (event.target.closest("[data-agent-code-run]")) { runAgentCodeAudit(); return; }
+  if (event.target.closest("[data-agent-redteam-run]")) { runAgentRedteam(); return; }
+  if (event.target.closest("[data-code-open-panel]")) { setModule("codeaudit"); return; }
+  const task = event.target.closest("[data-task-open]");
+  if (task) { openTaskPage(task.dataset.taskOpen); return; }
+  const config = event.target.closest("[data-agent-config]");
+  if (config) {
+    setModule("agents");
+    selectAgent(config.dataset.agentConfig);
+    const card = document.getElementById("agent-detail");
+    if (card) card.scrollIntoView({block: "start"});
+  }
+});
+
+document.querySelectorAll("[data-agent-tab]").forEach(button => {
+  button.addEventListener("click", () => setAgentTab(button.dataset.agentTab));
+});
+
+document.getElementById("task-back").addEventListener("click", () => {
+  if (navState.agentId) openAgentPage(navState.agentId); else setModule("agents");
+});
+document.getElementById("task-open-agent").addEventListener("click", () => {
+  if (navState.agentId) openAgentPage(navState.agentId); else setModule("agents");
+});
+
+// 设置 / 身份
+document.getElementById("account-logout").addEventListener("click", doLogout);
+document.getElementById("account-switch").addEventListener("click", switchAccount);
+document.getElementById("account-register").addEventListener("click", registerAccount);
+document.getElementById("account-switch-user").addEventListener("change", event => {
+  if (event.target.value) document.getElementById("account-switch-name").value = event.target.value;
 });
 
 // 工具条
@@ -4684,20 +5752,21 @@ document.getElementById("tb-export").addEventListener("click", () => {
   else document.getElementById("f-export").click();
 });
 document.getElementById("tb-search").addEventListener("click", openPalette);
-document.getElementById("tb-nav").addEventListener("click", toggleL2);
+document.getElementById("tb-nav").addEventListener("click", toggleSide);
 document.getElementById("crumb").addEventListener("click", event => {
   if (event.target.closest("[data-crumb-back]")) exitRunDetail();
 });
 
-document.getElementById("l2-collapse").addEventListener("click", toggleL2);
-document.getElementById("l2-scrim").addEventListener("click", () => { overlayOpen = false; applyResponsive(); });
+document.getElementById("side-collapse").addEventListener("click", toggleSide);
+document.getElementById("side-user").addEventListener("click", () => setModule("account"));
+document.getElementById("side-scrim").addEventListener("click", closeSideOverlay);
 document.getElementById("drawer-close").addEventListener("click", closeDrawer);
 document.getElementById("drawer-scrim").addEventListener("click", closeDrawer);
 window.addEventListener("resize", applyResponsive);
 
-// 宽度拖拽（220–340）
-(function bindNavResizer() {
-  const handle = document.getElementById("l2-resizer");
+// 宽度拖拽（240–360）
+(function bindSideResizer() {
+  const handle = document.getElementById("side-resizer");
   if (!handle) return;
   let dragging = false;
   handle.addEventListener("mousedown", event => {
@@ -4708,7 +5777,7 @@ window.addEventListener("resize", applyResponsive);
   });
   window.addEventListener("mousemove", event => {
     if (!dragging) return;
-    navState.width = Math.min(340, Math.max(220, event.clientX - 52));
+    navState.width = Math.min(360, Math.max(232, event.clientX));
     navState.collapsed = false;
     applyResponsive();
   });
@@ -4738,7 +5807,15 @@ function buildPaletteEntries() {
     setModule("runs");
     document.getElementById("f-export").click();
   }});
-  entries.push({type: "action", group: "操作", title: navState.collapsed ? "展开导航栏" : "折叠导航栏", hint: "布局", run: toggleL2});
+  entries.push({type: "action", group: "操作", title: navState.collapsed ? "展开侧边栏" : "折叠侧边栏", hint: "布局", run: toggleSide});
+  navAgents.forEach(agent => entries.push({
+    type: "agent", group: "现有 Agent", title: agent.name || agent.agent_id,
+    hint: agent.agent_id + " · " + agentRuns(agent.agent_id).length + " 运行", value: agent.agent_id,
+  }));
+  navTasks.slice(0, 60).forEach(task => entries.push({
+    type: "task", group: "任务", title: task.title,
+    hint: TASK_TYPES[task.type].label + " · " + (task.status === "done" ? "已完成" : "未完成"), value: task.id,
+  }));
   navRuns.slice(0, 80).forEach(run => entries.push({
     type: "run", group: "运行", title: run.trace_id,
     hint: (run.agent_id || "") + " · " + relTime(run.created_at), value: run.trace_id,
@@ -4824,10 +5901,12 @@ function movePalette(step) {
 function executePalette(item) {
   closePalette();
   if (item.type === "module") setModule(item.value);
-  else if (item.type === "run") { switchTab("traces"); openReplay(item.value); }
+  else if (item.type === "agent") openAgentPage(item.value);
+  else if (item.type === "task") openTaskPage(item.value);
+  else if (item.type === "run") { openReplay(item.value); }
   else if (item.type === "approval") { setModule("approvals"); showApprovalDetail(item.value); }
   else if (item.type === "policy") setModule("policies");
-  else if (item.type === "resource" && item.value) { switchTab("traces"); locateSpan(item.value); }
+  else if (item.type === "resource" && item.value) { if (navState.runId) setModule("audit"); locateSpan(item.value); }
   else if (item.type === "action" && item.run) item.run();
 }
 
@@ -4851,10 +5930,6 @@ document.getElementById("palette-list").addEventListener("click", event => {
   }
 });
 document.getElementById("palette-scrim").addEventListener("click", closePalette);
-
-document.querySelectorAll(".l1-btn").forEach(button => {
-  button.addEventListener("click", () => setModule(button.dataset.module));
-});
 
 document.addEventListener("keydown", event => {
   const modifier = event.metaKey || event.ctrlKey;
@@ -4884,14 +5959,17 @@ document.getElementById("replay-list").addEventListener("keydown", event => {
 });
 
 function restoreRoute() {
-  switchTab(navState.panel || "overview");
-  if (navState.module === "runs" && navState.runId) openReplay(navState.runId);
+  switchTab(navState.panel || "guide");
+  if (navState.module === "agent" && navState.agentId) openAgentPage(navState.agentId);
+  if (navState.module === "task" && navState.taskId) openTaskPage(navState.taskId);
+  if (navState.module === "audit" && navState.runId) openReplay(navState.runId);
 }
 
 loadNavState();
+loadTasks();
 applyResponsive();
 syncModuleActive();
-renderL2();
+renderSide();
 renderToolbar();
 
 // ------------------------- 初始化 -------------------------

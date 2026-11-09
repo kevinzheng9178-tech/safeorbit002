@@ -183,6 +183,17 @@ class Rule(BaseModel):
     description: str = ""
 
 
+class Citation(BaseModel):
+    """结论依据：知识库中的一段可核对文本。"""
+
+    doc_id: str
+    title: str
+    section: str = ""
+    snippet: str
+    source: str = ""                        # 出处链接或标准编号
+    score: float = 0.0
+
+
 class RuleHit(BaseModel):
     rule_id: str
     rule_name: str
@@ -194,6 +205,9 @@ class RuleHit(BaseModel):
     confidence: float = 1.0
     source: Literal["rule", "judge", "human"] = "rule"
     needs_review: bool = False              # 模型判的结论默认需要人工复核
+    produced_by: Optional[str] = None       # 产出该结论的审计 Agent 角色
+    evidence_quote: Optional[str] = None    # 轨迹原文摘录，必须能在原文中逐字找到
+    citations: List[Citation] = Field(default_factory=list)  # 知识库依据
 
 
 class CostBreakdown(BaseModel):

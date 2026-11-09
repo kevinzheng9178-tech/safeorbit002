@@ -42,50 +42,86 @@ def test_dashboard_ids_and_script_mounts():
     script = DASHBOARD_HTML.split("<script>", 1)[1].split("</script>", 1)[0]
     references = set(re.findall(r'getElementById\([\"\x27]([^\"\x27]+)[\"\x27]\)', script))
     references.update("ms-" + name for name in re.findall(r"\bms\('([^']+)'\)", script))
+    # 审批角标由侧边栏动态渲染，不属于静态 DOM
+    references -= {"side-approval-count"}
     assert references <= set(ids)
 
 
-def test_dashboard_three_layer_navigation_contract():
-    """L1 图标栏 / L2 导航 / L3 主内容 + 工具条 + 抽屉。"""
+def test_dashboard_sidebar_navigation_contract():
+    """Linear 式单侧边栏：固定模块 + 任务组 + 底部身份，主区独立滚动。"""
 
     nodes = dashboard_nodes()
     modules = [attrs["data-module"] for _, attrs, _ in nodes if "data-module" in attrs]
-    assert modules == ["guide", "overview", "runs", "approvals", "policies", "agents", "settings"]
+    assert modules == ["guide", "agents", "models", "account"]
     panels = [attrs["id"] for _, attrs, _ in nodes if "panel" in attrs.get("class", "").split()]
     assert set(panels) == {
-        "panel-guide", "panel-overview", "panel-traces", "panel-policies",
-        "panel-dispositions", "panel-codeaudit", "panel-agents", "panel-settings",
+        "panel-guide", "panel-overview", "panel-traces", "panel-audit", "panel-policies",
+        "panel-dispositions", "panel-codeaudit", "panel-redteam", "panel-agents",
+        "panel-settings", "panel-agent", "panel-task", "panel-account",
     }
     assert sum(
         "active" in attrs.get("class", "").split()
         for _, attrs, _ in nodes
         if attrs.get("id") in panels
     ) == 1
-    for name in ["l1", "l2", "l2-body", "l2-collapse", "l2-resizer", "l3-body",
-                 "crumb", "tb-nav", "tb-views", "drawer", "drawer-body", "palette", "palette-input"]:
+    for name in ["side", "side-body", "side-groups", "side-collapse", "side-resizer",
+                 "side-scrim", "side-user", "side-approval-count",
+                 "side-agents-toggle", "side-guide-toggle",
+                 "l3-body", "crumb", "tb-nav", "tb-views", "drawer", "drawer-body",
+                 "palette", "palette-input"]:
         assert 'id="%s"' % name in DASHBOARD_HTML
-    # 结构要求：无页面级大标题，L2 归属 L1，L3 内嵌 44px 工具条
-    assert ".l3-body .page-heading { display: none; }" in DASHBOARD_HTML
-    assert "--l2w" in DASHBOARD_HTML
+    # 旧的 L1 图标栏 / L2 导航已合并进单侧边栏
+    assert 'class="l1"' not in DASHBOARD_HTML
+    assert 'class="l2"' not in DASHBOARD_HTML
+    # 三个固定模块：使用导航 / Agent 管理 / 系统设置
+    for label in ["使用导航", "Agent 管理", "系统设置"]:
+        assert label in DASHBOARD_HTML
+    # 四个任务组块
+    for label in ["现有 Agent", "Agent 审计", "代码审计", "红队检测"]:
+        assert label in DASHBOARD_HTML
+    # 侧边栏样式：可拖拽宽度、窄屏浮层、抽屉 480px
+    assert "--sidew" in DASHBOARD_HTML
     assert "width: 480px" in DASHBOARD_HTML
-    assert "@media (max-width: 1279px)" in DASHBOARD_HTML
+    assert "@media (max-width: 1023px)" in DASHBOARD_HTML
+    assert ".l3-body .page-heading { display: none; }" in DASHBOARD_HTML
     # 交互与持久化
-    assert "safeorbit.nav.v1" in DASHBOARD_HTML
+    assert "safeorbit.nav.v2" in DASHBOARD_HTML
+    assert "safeorbit.tasks.v1" in DASHBOARD_HTML
     assert 'event.key.toLowerCase() === "k"' in DASHBOARD_HTML
-    assert "function renderL2Runs" in DASHBOARD_HTML
-    assert "function renderL2Approvals" in DASHBOARD_HTML
-    assert "function showRunDetail" in DASHBOARD_HTML
-    assert "data-run-open" in DASHBOARD_HTML
-    assert "data-approval-id" in DASHBOARD_HTML
-    # 导航页与智能体接入入口
+    for fn in [
+        "function renderSide(", "function renderAgentPage(", "function renderTaskPage(",
+        "function renderAccount(", "function openAgentPage(", "function openTaskPage(",
+        "function runAgentAudit(", "function runAgentCodeAudit(", "function runAgentRedteam(",
+        "function switchAccount(", "function registerAccount(", "function scrollAgentsSection(",
+        "function showRunDetail(",
+    ]:
+        assert fn in DASHBOARD_HTML
+    # Agent 工作台两个入口：任务总计 / 检查记录（记录按任务类型分组）
+    for name in ["agent-tab-total", "agent-tab-records"]:
+        assert 'id="%s"' % name in DASHBOARD_HTML
+    assert "data-agent-row" in DASHBOARD_HTML
+    assert "data-task-row" in DASHBOARD_HTML
+    assert "data-agent-delete" in DASHBOARD_HTML
+    assert 'method: "DELETE"' in DASHBOARD_HTML
+    # 四个任务组块与顶部固定块一样可展开 / 收起，状态本地持久化
+    assert "data-group-toggle" in DASHBOARD_HTML
+    assert ".side-group-toggle" in DASHBOARD_HTML
+    assert "side-group-body" in DASHBOARD_HTML
+    assert "navState.groups" in DASHBOARD_HTML
+    assert "groups: navState.groups" in DASHBOARD_HTML
+    assert "GROUP_ICONS" in DASHBOARD_HTML
+    assert "GROUP_ICONS[key]" in DASHBOARD_HTML
+    for key in ["agents", "agent_audit", "code_audit", "redteam"]:
+        assert key in DASHBOARD_HTML
+    # 设置：身份切换、注册账号、登出
+    for name in ["account-switch", "account-register", "account-logout", "account-current"]:
+        assert 'id="%s"' % name in DASHBOARD_HTML
+    # 导航页与智能体接入入口仍在
     assert 'id="panel-guide"' in DASHBOARD_HTML
     assert 'id="guide-next"' in DASHBOARD_HTML
     assert "data-guide-go" in DASHBOARD_HTML
     assert "function renderGuide" in DASHBOARD_HTML
     assert "data-agents-section" in DASHBOARD_HTML
-    # 总览 / 使用导航为整页布局，不占二级栏
-    assert 'guide: {label: "使用导航", panel: "guide", full: true}' in DASHBOARD_HTML
-    assert "meta.full" in DASHBOARD_HTML
     for name in ["guide-primary", "guide-ring-value", "guide-progress-count", "guide-copy-demo"]:
         assert 'id="%s"' % name in DASHBOARD_HTML
 
@@ -131,7 +167,7 @@ def test_dashboard_details_start_collapsed():
         "policy-list-card", "approval-card", "runtime-isolated-card",
         "runtime-tools-card", "manual-disposition-card", "code-result-card",
         "extended-audit-card", "data-governance-card",
-        "model-catalog-card", "model-settings", "agent-management-card", "version-card",
+        "model-settings", "agent-management-card", "version-card",
     ]:
         assert 'id="%s"' % name in DASHBOARD_HTML
 
@@ -149,11 +185,15 @@ def test_code_audit_drag_and_drop_upload_contract():
 
 
 def test_dashboard_ambient_audit_background():
-    """控制台背景为动态审计底纹：网格漂移、扫描光束、呼吸光晕，且不拦截交互。"""
+    """控制台背景为静态审计底纹：网格、光晕、光带保留，但不做全屏持续重绘。"""
 
     assert '<div class="bg-ambient" aria-hidden="true">' in DASHBOARD_HTML
-    for token in ("bg-halo", "bg-scan", "@keyframes bgDrift", "@keyframes bgScan", "@keyframes bgHalo"):
+    for token in ("bg-halo", "bg-scan"):
         assert token in DASHBOARD_HTML
+    # 静态化后不再声明漂移/扫描/呼吸动画，避免非整数 DPI 下全屏合成层黑屏
+    assert "@keyframes bgDrift" not in DASHBOARD_HTML
+    assert "@keyframes bgScan" not in DASHBOARD_HTML
+    assert "@keyframes bgHalo" not in DASHBOARD_HTML
     assert "pointer-events: none" in DASHBOARD_HTML
     assert "@media (prefers-reduced-motion: reduce)" in DASHBOARD_HTML
 

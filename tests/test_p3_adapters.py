@@ -289,7 +289,9 @@ def test_dashboard_dom_references_and_agent_panel():
     parser = IdParser()
     parser.feed(DASHBOARD_HTML)
     references = set(re.findall(r'getElementById\(["\']([^"\']+)["\']\)', DASHBOARD_HTML))
-    assert references <= parser.ids, references - parser.ids
+    # 审批角标由侧边栏渲染时动态插入，不属于静态 DOM
+    dynamic_ids = {"side-approval-count"}
+    assert references - dynamic_ids <= parser.ids, (references - dynamic_ids) - parser.ids
     tabs = re.findall(r'data-tab="([^"]+)"', DASHBOARD_HTML)
     assert all("panel-" + tab in parser.ids for tab in tabs)
     assert "async function loadAgents()" in DASHBOARD_HTML
